@@ -45,7 +45,6 @@ function Card({ number, title, auth, desc, steps, callout, imageLabel }) {
         </div>
       </div>
       {callout && <div className="faq-callout">{callout}</div>}
-      <ImageSlot label={imageLabel} />
     </div>
   )
 }

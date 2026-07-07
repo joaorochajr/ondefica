@@ -136,7 +136,22 @@ function CriarEvento() {
         colaboradores,
       })
 
-      if (!res.ok) { alert('Erro ao criar evento.'); return }
+
+    if (!res.ok) {
+    const status = res.status;
+    
+    const dadosErro = await res.json().catch(() => ({}));
+    const mensagemDoServidor = dadosErro.message || 'Ocorreu um erro inesperado.';
+
+    switch (status) {
+        case 409:
+            alert(mensagemDoServidor); 
+            break;
+        default:
+            alert(`Erro código ${status}: ${mensagemDoServidor}`);
+          }
+          return;
+      }
 
       const criado = await res.json()
       const eventoId = criado._id || criado.id

@@ -161,7 +161,18 @@ function EditarEvento() {
         alert(msg)
         irParaStands ? navigate(`/eventos/${id}/stands`) : navigate('/meus-eventos')
       } else {
-        alert('Erro ao atualizar evento.')
+        const status = res.status;
+        
+        const dadosErro = await res.json().catch(() => ({}));
+        const mensagemDoServidor = dadosErro.message || 'Ocorreu um erro inesperado.';
+
+        switch (status) {
+            case 409:
+                alert(mensagemDoServidor); 
+                break;
+            default:
+                alert(`Erro código ${status}: ${mensagemDoServidor}`);
+              }
       }
     } catch (err) {
       console.error('Erro:', err)

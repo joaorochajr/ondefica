@@ -71,11 +71,11 @@ function MeusEventos() {
                   <h3 className="evento-card__title">{evento.descricao}</h3>
                   <p className="evento-card__date">
                     <span className="evento-card__date-icon">📅</span>
-                    <strong>Início:</strong>&nbsp;{new Date(evento.data_inicio).toLocaleDateString()}
+                    <strong>Início:</strong>&nbsp;{new Date(evento.data_inicio).toLocaleDateString('pt-BR')}
                   </p>
                   <p className="evento-card__date">
                     <span className="evento-card__date-icon">🏁</span>
-                    <strong>Fim:</strong>&nbsp;{new Date(evento.data_fim).toLocaleDateString()}
+                    <strong>Fim:</strong>&nbsp;{new Date(evento.data_fim).toLocaleDateString('pt-BR')}
                   </p>
                 </div>
 

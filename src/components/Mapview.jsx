@@ -158,7 +158,7 @@ function MapView() {
                     <h2>Encontrando sua localização</h2>
 
                     <p>
-                        Para exibir o mapa corretamente, precisamos acessar sua localização.
+                        Para exibir o mapa, precisamos acessar sua localização.
                     </p>
 
                     <span className="gps-subtext">

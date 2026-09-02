@@ -157,7 +157,11 @@ function MapView() {
         // exibindo o alert
         if (erroLocalizacao) {
             navigate('/',{replace: true}); //manda o usuario para a rota '/'(Home), e substitui a entrada do historico do navegador ao invés de empilhar
-            setTimeout(()=>{ window.alert(erroLocalizacao);},0); //faz a função rodar só depois que o navegador retornar à tela Home
+            requestAnimationFrame(() => { //encadeamento de rAF para garantir que o alerta só vai aparecer depois da tela pintar Home
+                requestAnimationFrame(() => {
+                    window.alert(erroLocalizacao); //faz a função rodar só depois que o navegador retornar à tela Home
+                });
+            });
         }
     },[erroLocalizacao, navigate]);
 

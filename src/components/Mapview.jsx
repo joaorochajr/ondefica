@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
+import {useNavigate} from 'react-router-dom' //função que cuida da navegação entre as paginas da aplicação
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
 
@@ -73,7 +74,11 @@ function FocoDinamico({ coordenadas }) {
 }
 
 function MapView() {
+    const navigate = useNavigate() //chama a função importada e serve para ir para uma rota x
     const [position, setPosition] = useState(null)
+    const [erroLocalizacao, setErroLocalizacao] = useState( 
+                    () => !navigator.geolocation ? "Seu navegador não suporta geolocalização. Não é possível exibir o mapa." : null
+                ) //caso o navegador não possua API com acesso ao GPS, muda o valor de erroLocalizacao para a string, erroLocalizacao pode ser mudado posteriormente por setErroLocalizacao
     const [eventos, setEventos] = useState([])
     const [stands, setStands] = useState([])
     const [eventoAtivoId, setEventoAtivoId] = useState(null)
@@ -110,6 +115,7 @@ function MapView() {
     }, []);
 
     useEffect(() => {
+        if (!navigator.geolocation) {return;} //corte da função caso o navegador não tenha suporte à localização, o que evita chamar watchPosition(), que geraria um erro se executada nessa condição
         const watchId = navigator.geolocation.watchPosition(
             (pos) => {
                 setPosition([
@@ -117,7 +123,23 @@ function MapView() {
                     pos.coords.longitude,
                 ]);
             },
-            (err) => console.error("Erro de GPS:", err),
+            (err) => {
+                console.error("Erro de GPS:", err);
+
+                //mensagem de erro genérica numa variável mutável(não constante)
+                let mensagem = "Não foi possível acessar sua localização.";
+                
+                //verifica se é algum erro especifico para notificar esse problema na mensagem de erro
+                if (err.code === err.PERMISSION_DENIED) {
+                    mensagem = "Você negou o acesso à localização. Permita o acesso para ver o mapa";
+                } else if (err.code === err.POSITION_UNAVAILABLE){
+                    mensagem = "Sua localização está indisponível no momento.";
+                } else if (err.code === err.TIMEOUT){
+                    mensagem = "Tempo esgotado ao tentar obter sua localização.";
+                }
+
+                setErroLocalizacao(mensagem);
+            },
             {
                 enableHighAccuracy: true,
                 maximumAge: 0,
@@ -129,6 +151,15 @@ function MapView() {
             navigator.geolocation.clearWatch(watchId);
         };
     }, []);
+
+    useEffect(()=> { //bloco de código que roda novamente toda vez que erroLocalizacao ou navigate mudarem de valor
+        //quando o gps falha, chamamos setErroLocalizacao, que atualiza erroLocalizacao, esse trecho capta a mudança da variavel e executa o if,
+        // exibindo o alert
+        if (erroLocalizacao) {
+            window.alert(erroLocalizacao);
+            navigate('/',{replace: true}); //manda o usuario para a rota '/'(Home), e substitui a entrada do historico do navegador ao invés de empilhar
+        }
+    },[erroLocalizacao, navigate]);
 
     useEffect(() => {
         if (position && markerUsuarioRef.current && !popupUsuarioAberto) {
@@ -148,6 +179,19 @@ function MapView() {
     const eventosFiltrados = eventos.filter(evento =>
         evento.descricao?.toLowerCase().includes(termoBusca.toLowerCase())
     );
+
+    //renderização condicional: se erroLocalização tiver algum valor, a função para e devolve essa tela de aviso ao invés de contiuar montando o mapa
+    if (erroLocalizacao){
+        return (
+            <div className="gps-screen">
+                <div className="gps-card">
+                    <h2> Não foi possível acessar sua localização</h2>
+                    <p>{erroLocalizacao}</p>
+                    <span className="gps-subtext"> Redirecionando para a tela inicial... </span>
+                </div>
+            </div>
+        );
+    }
 
     if (!position) {
         return (

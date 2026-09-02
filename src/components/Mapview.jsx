@@ -156,8 +156,8 @@ function MapView() {
         //quando o gps falha, chamamos setErroLocalizacao, que atualiza erroLocalizacao, esse trecho capta a mudança da variavel e executa o if,
         // exibindo o alert
         if (erroLocalizacao) {
-            window.alert(erroLocalizacao);
             navigate('/',{replace: true}); //manda o usuario para a rota '/'(Home), e substitui a entrada do historico do navegador ao invés de empilhar
+            setTimeout(()=>{ window.alert(erroLocalizacao);},0); //faz a função rodar só depois que o navegador retornar à tela Home
         }
     },[erroLocalizacao, navigate]);
 
@@ -179,19 +179,6 @@ function MapView() {
     const eventosFiltrados = eventos.filter(evento =>
         evento.descricao?.toLowerCase().includes(termoBusca.toLowerCase())
     );
-
-    //renderização condicional: se erroLocalização tiver algum valor, a função para e devolve essa tela de aviso ao invés de contiuar montando o mapa
-    if (erroLocalizacao){
-        return (
-            <div className="gps-screen">
-                <div className="gps-card">
-                    <h2> Não foi possível acessar sua localização</h2>
-                    <p>{erroLocalizacao}</p>
-                    <span className="gps-subtext"> Redirecionando para a tela inicial... </span>
-                </div>
-            </div>
-        );
-    }
 
     if (!position) {
         return (

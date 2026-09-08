@@ -74,8 +74,6 @@ function FocoDinamico({ coordenadas }) {
 
 function MapView() {
     const [position, setPosition] = useState(null)
-    // null enquanto não sabemos, ou { mensagem, permissaoBloqueada } quando dá erro
-    const [erroLocalizacao, setErroLocalizacao] = useState(null);
     const [eventos, setEventos] = useState([])
     const [stands, setStands] = useState([])
     const [eventoAtivoId, setEventoAtivoId] = useState(null)
@@ -114,8 +112,6 @@ function MapView() {
 
     // pede a localização ao navegador; 
     function solicitarLocalizacao() {
-        setErroLocalizacao(null); // limpa erro anterior antes de tentar de novo
-
         if (watchIdRef.current !== null) {
             navigator.geolocation.clearWatch(watchIdRef.current);
         }
@@ -125,27 +121,11 @@ function MapView() {
                 setPosition([pos.coords.latitude, pos.coords.longitude]);
             },
             (err) => {
-                console.error("Erro de GPS:", err);
-
-                let mensagem = "Não foi possível acessar sua localização.";
-                if (err.code === err.PERMISSION_DENIED) {
-                    mensagem = "Você negou o acesso à localização. Permita o acesso para ver o mapa.";
-                } else if (err.code === err.POSITION_UNAVAILABLE) {
-                    mensagem = "Sua localização está indisponível no momento.";
-                } else if (err.code === err.TIMEOUT) {
-                    mensagem = "Tempo esgotado ao tentar obter sua localização.";
-                }
-
-                setErroLocalizacao({
-                    mensagem,
-                    // só nesse caso o botão sozinho não resolve: o navegador já sabe a resposta e não vai perguntar de novo
-                    permissaoBloqueada: err.code === err.PERMISSION_DENIED
-                });
-            },
+                console.error("Erro ao obter localização:", err);
+            }
             {
                 enableHighAccuracy: true,
-                maximumAge: 0,
-                timeout: 5000
+                maximumAge: 0
             }
         );
 
@@ -210,26 +190,15 @@ function MapView() {
         return (
             <div className="gps-screen">
                 <div className="gps-card">
-                {erroLocalizacao ? (
-                        <>
-                            <h2>Não foi possível acessar sua localização</h2>
-                    
-                            <button className="gps-retry-btn" onClick={solicitarLocalizacao}>
-                                Tentar novamente
-                            </button>
-                        </>
-                    ) : (
-                        <>
-                            <div className="loader"></div>
-                            <h2>Encontrando sua localização</h2>
-                            <p>
-                                Para exibir o mapa corretamente, precisamos acessar sua localização.
-                            </p>
-                            <span className="gps-subtext">
-                                Aguarde enquanto buscamos sua posição...
-                            </span>
-                        </>
-                    )}
+                    <div className="loader"></div>
+                    <h2>Encontrando sua localização</h2>
+                    <p>
+                        Para exibir o mapa corretamente, precisamos acessar sua localização.
+                    </p>
+
+                    <button className="gps-retry-btn" onClick={solicitarLocalizacao}>
+                        Tentar novamente
+                    </button>
                 </div>
             </div>
         );

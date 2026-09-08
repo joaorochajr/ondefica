@@ -191,12 +191,21 @@ function MapView() {
             <div className="gps-screen">
                 <div className="gps-card">
                     <div className="loader"></div>
+
                     <h2>Encontrando sua localização</h2>
+
                     <p>
                         Para exibir o mapa corretamente, precisamos acessar sua localização.
                     </p>
 
-                    <button className="gps-retry-btn" onClick={solicitarLocalizacao}>
+                    <span className="gps-subtext">
+                        Permita o acesso à localização no navegador.
+                    </span>
+
+                    <button
+                        className="gps-retry-btn"
+                        onClick={solicitarLocalizacao}
+                    >
                         Tentar novamente
                     </button>
                 </div>

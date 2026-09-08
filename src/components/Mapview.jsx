@@ -73,7 +73,6 @@ function FocoDinamico({ coordenadas }) {
 }
 
 function MapView() {
-    const [position, setPosition] = useState(null)
     const [erroLocalizacao, setErroLocalizacao] = useState(null);
     const [position, setPosition] = useState(null)
     const [eventos, setEventos] = useState([])
@@ -124,6 +123,7 @@ function MapView() {
             },
             (err) => {
                 console.error("Erro ao obter localização:", err);
+                setErroLocalizacao(true);
             },
             {
                 enableHighAccuracy: true,

@@ -1,5 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
-import {useNavigate} from 'react-router-dom' //função que cuida da navegação entre as paginas da aplicação
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
 
@@ -74,7 +73,6 @@ function FocoDinamico({ coordenadas }) {
 }
 
 function MapView() {
-    const navigate = useNavigate() //chama a função importada e serve para ir para uma rota x
     const [position, setPosition] = useState(null)
     const [erroLocalizacao, setErroLocalizacao] = useState( 
                     () => !navigator.geolocation ? "Seu navegador não suporta geolocalização. Não é possível exibir o mapa." : null
@@ -100,6 +98,7 @@ function MapView() {
     const initialCenterRef = useRef(false)
     const markerRefs = useRef({});
     const standMarkerRefs = useRef({});
+    const watchIdRef = useRef(null);
     
     useEffect(() => {
         async function load() {
@@ -114,9 +113,19 @@ function MapView() {
         load();
     }, []);
 
-    useEffect(() => {
-        if (!navigator.geolocation) {return;} //corte da função caso o navegador não tenha suporte à localização, o que evita chamar watchPosition(), que geraria um erro se executada nessa condição
-        const watchId = navigator.geolocation.watchPosition(
+    // pede a localização ao navegador; pode ser chamada tanto no mount quanto de novo pelo botão "OK" da tela de erro
+    const solicitarLocalizacao = useCallback(() => {
+        if (!navigator.geolocation) {
+            setErroLocalizacao("Seu navegador não suporta geolocalização. Não é possível exibir o mapa.");
+            return;
+        }
+
+        // se já existe um watch rodando (ex: usuário clicou em tentar de novo), encerra antes de abrir outro
+        if (watchIdRef.current !== null) {
+            navigator.geolocation.clearWatch(watchIdRef.current);
+        }
+
+        watchIdRef.current = navigator.geolocation.watchPosition(
             (pos) => {
                 setPosition([
                     pos.coords.latitude,
@@ -128,7 +137,7 @@ function MapView() {
 
                 //mensagem de erro genérica numa variável mutável(não constante)
                 let mensagem = "Não foi possível acessar sua localização.";
-                
+
                 //verifica se é algum erro especifico para notificar esse problema na mensagem de erro
                 if (err.code === err.PERMISSION_DENIED) {
                     mensagem = "Você negou o acesso à localização. Permita o acesso para ver o mapa";
@@ -146,24 +155,18 @@ function MapView() {
                 timeout: 5000
             }
         );
-
-        return () => {
-            navigator.geolocation.clearWatch(watchId);
-        };
     }, []);
 
-    useEffect(()=> { //bloco de código que roda novamente toda vez que erroLocalizacao ou navigate mudarem de valor
-        //quando o gps falha, chamamos setErroLocalizacao, que atualiza erroLocalizacao, esse trecho capta a mudança da variavel e executa o if,
-        // exibindo o alert
-        if (erroLocalizacao) {
-            navigate('/',{replace: true}); //manda o usuario para a rota '/'(Home), e substitui a entrada do historico do navegador ao invés de empilhar
-            requestAnimationFrame(() => { //encadeamento de rAF para garantir que o alerta só vai aparecer depois da tela pintar Home
-                requestAnimationFrame(() => {
-                    window.alert(erroLocalizacao); //faz a função rodar só depois que o navegador retornar à tela Home
-                });
-            });
-        }
-    },[erroLocalizacao, navigate]);
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- falso positivo: os setState de solicitarLocalizacao só rodam dentro dos callbacks assíncronos do watchPosition, nunca de forma síncrona aqui
+        solicitarLocalizacao();
+
+        return () => {
+            if (watchIdRef.current !== null) {
+                navigator.geolocation.clearWatch(watchIdRef.current);
+            }
+        };
+    }, [solicitarLocalizacao]);
 
     useEffect(() => {
         if (position && markerUsuarioRef.current && !popupUsuarioAberto) {
@@ -185,6 +188,30 @@ function MapView() {
     );
 
     if (!position) {
+        // permissão negada / indisponível / sem suporte: mostra o motivo e deixa o usuário tentar de novo
+        if (erroLocalizacao) {
+            return (
+                <div className="gps-screen">
+                    <div className="gps-card">
+                        <h2>Não foi possível acessar o mapa</h2>
+
+                        <p>{erroLocalizacao}</p>
+
+                        <button
+                            className="gps-retry-btn"
+                            onClick={() => {
+                                setErroLocalizacao(null); // limpa o erro antigo pra tela voltar a mostrar "carregando" enquanto tenta de novo
+                                solicitarLocalizacao();
+                            }}
+                        >
+                            OK, tentar novamente
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        // ainda aguardando o navegador responder (usuário ainda não decidiu, ou GPS carregando)
         return (
             <div className="gps-screen">
                 <div className="gps-card">

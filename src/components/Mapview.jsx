@@ -210,20 +210,10 @@ function MapView() {
         return (
             <div className="gps-screen">
                 <div className="gps-card">
-                    {erroLocalizacao ? (
+                {erroLocalizacao ? (
                         <>
-                            <h2>Não conseguimos acessar sua localização</h2>
-
-                            <p>{erroLocalizacao.mensagem}</p>
-
-                            {erroLocalizacao.permissaoBloqueada && (
-                                <ol className="gps-instrucoes">
-                                    <li>Clique no ícone de cadeado (ou "ⓘ") ao lado do endereço do site, na barra do navegador</li>
-                                    <li>Encontre "Localização" nas permissões e mude para "Permitir"</li>
-                                    <li>Volte aqui — a página detecta a mudança e tenta de novo sozinha</li>
-                                </ol>
-                            )}
-
+                            <h2>Não foi possível acessar sua localização</h2>
+                    
                             <button className="gps-retry-btn" onClick={solicitarLocalizacao}>
                                 Tentar novamente
                             </button>

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
 
@@ -74,9 +74,8 @@ function FocoDinamico({ coordenadas }) {
 
 function MapView() {
     const [position, setPosition] = useState(null)
-    const [erroLocalizacao, setErroLocalizacao] = useState( 
-                    () => !navigator.geolocation ? "Seu navegador não suporta geolocalização. Não é possível exibir o mapa." : null
-                ) //caso o navegador não possua API com acesso ao GPS, muda o valor de erroLocalizacao para a string, erroLocalizacao pode ser mudado posteriormente por setErroLocalizacao
+    // null enquanto não sabemos, ou { mensagem, permissaoBloqueada } quando dá erro
+    const [erroLocalizacao, setErroLocalizacao] = useState(null);
     const [eventos, setEventos] = useState([])
     const [stands, setStands] = useState([])
     const [eventoAtivoId, setEventoAtivoId] = useState(null)
@@ -98,8 +97,8 @@ function MapView() {
     const initialCenterRef = useRef(false)
     const markerRefs = useRef({});
     const standMarkerRefs = useRef({});
-    const watchIdRef = useRef(null);
-    
+    const watchIdRef = useRef(null); // guarda o watch ativo, pra dar clearWatch antes de abrir outro (evita empilhar watchers a cada "tentar novamente")
+
     useEffect(() => {
         async function load() {
             try {
@@ -113,41 +112,35 @@ function MapView() {
         load();
     }, []);
 
-    // pede a localização ao navegador; pode ser chamada tanto no mount quanto de novo pelo botão "OK" da tela de erro
-    const solicitarLocalizacao = useCallback(() => {
-        if (!navigator.geolocation) {
-            setErroLocalizacao("Seu navegador não suporta geolocalização. Não é possível exibir o mapa.");
-            return;
-        }
+    // pede a localização ao navegador; 
+    function solicitarLocalizacao() {
+        setErroLocalizacao(null); // limpa erro anterior antes de tentar de novo
 
-        // se já existe um watch rodando (ex: usuário clicou em tentar de novo), encerra antes de abrir outro
         if (watchIdRef.current !== null) {
             navigator.geolocation.clearWatch(watchIdRef.current);
         }
 
         watchIdRef.current = navigator.geolocation.watchPosition(
             (pos) => {
-                setPosition([
-                    pos.coords.latitude,
-                    pos.coords.longitude,
-                ]);
+                setPosition([pos.coords.latitude, pos.coords.longitude]);
             },
             (err) => {
                 console.error("Erro de GPS:", err);
 
-                //mensagem de erro genérica numa variável mutável(não constante)
                 let mensagem = "Não foi possível acessar sua localização.";
-
-                //verifica se é algum erro especifico para notificar esse problema na mensagem de erro
                 if (err.code === err.PERMISSION_DENIED) {
-                    mensagem = "Você negou o acesso à localização. Permita o acesso para ver o mapa";
-                } else if (err.code === err.POSITION_UNAVAILABLE){
+                    mensagem = "Você negou o acesso à localização. Permita o acesso para ver o mapa.";
+                } else if (err.code === err.POSITION_UNAVAILABLE) {
                     mensagem = "Sua localização está indisponível no momento.";
-                } else if (err.code === err.TIMEOUT){
+                } else if (err.code === err.TIMEOUT) {
                     mensagem = "Tempo esgotado ao tentar obter sua localização.";
                 }
 
-                setErroLocalizacao(mensagem);
+                setErroLocalizacao({
+                    mensagem,
+                    // só nesse caso o botão sozinho não resolve: o navegador já sabe a resposta e não vai perguntar de novo
+                    permissaoBloqueada: err.code === err.PERMISSION_DENIED
+                });
             },
             {
                 enableHighAccuracy: true,
@@ -155,10 +148,12 @@ function MapView() {
                 timeout: 5000
             }
         );
-    }, []);
+
+        return watchIdRef.current;
+    }
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- falso positivo: os setState de solicitarLocalizacao só rodam dentro dos callbacks assíncronos do watchPosition, nunca de forma síncrona aqui
+        
         solicitarLocalizacao();
 
         return () => {
@@ -166,7 +161,31 @@ function MapView() {
                 navigator.geolocation.clearWatch(watchIdRef.current);
             }
         };
-    }, [solicitarLocalizacao]);
+    }, []);
+
+    // o "solicitar de novo" fica escutando a permissão do navegador e,
+    // quando o usuário muda ela manualmente nas configs do site, chama solicitarLocalizacao sozinha
+    useEffect(() => {
+        if (!navigator.permissions?.query) {return;} 
+
+        let status;
+        let cancelado = false;
+
+        navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+            if (cancelado) {return;}
+            status = result;
+            status.onchange = () => {
+                if (status.state === 'granted' || status.state === 'prompt') {
+                    solicitarLocalizacao();
+                }
+            };
+        }).catch(() => {});
+
+        return () => {
+            cancelado = true;
+            if (status) {status.onchange = null;}
+        };
+    }, []);
 
     useEffect(() => {
         if (position && markerUsuarioRef.current && !popupUsuarioAberto) {
@@ -188,44 +207,39 @@ function MapView() {
     );
 
     if (!position) {
-        // permissão negada / indisponível / sem suporte: mostra o motivo e deixa o usuário tentar de novo
-        if (erroLocalizacao) {
-            return (
-                <div className="gps-screen">
-                    <div className="gps-card">
-                        <h2>Não foi possível acessar o mapa</h2>
-
-                        <p>{erroLocalizacao}</p>
-
-                        <button
-                            className="gps-retry-btn"
-                            onClick={() => {
-                                setErroLocalizacao(null); // limpa o erro antigo pra tela voltar a mostrar "carregando" enquanto tenta de novo
-                                solicitarLocalizacao();
-                            }}
-                        >
-                            OK, tentar novamente
-                        </button>
-                    </div>
-                </div>
-            );
-        }
-
-        // ainda aguardando o navegador responder (usuário ainda não decidiu, ou GPS carregando)
         return (
             <div className="gps-screen">
                 <div className="gps-card">
-                    <div className="loader"></div>
+                    {erroLocalizacao ? (
+                        <>
+                            <h2>Não conseguimos acessar sua localização</h2>
 
-                    <h2>Encontrando sua localização</h2>
+                            <p>{erroLocalizacao.mensagem}</p>
 
-                    <p>
-                        Para exibir o mapa corretamente, precisamos acessar sua localização.
-                    </p>
+                            {erroLocalizacao.permissaoBloqueada && (
+                                <ol className="gps-instrucoes">
+                                    <li>Clique no ícone de cadeado (ou "ⓘ") ao lado do endereço do site, na barra do navegador</li>
+                                    <li>Encontre "Localização" nas permissões e mude para "Permitir"</li>
+                                    <li>Volte aqui — a página detecta a mudança e tenta de novo sozinha</li>
+                                </ol>
+                            )}
 
-                    <span className="gps-subtext">
-                    Aguarde enquanto buscamos sua posição...
-                </span>
+                            <button className="gps-retry-btn" onClick={solicitarLocalizacao}>
+                                Tentar novamente
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <div className="loader"></div>
+                            <h2>Encontrando sua localização</h2>
+                            <p>
+                                Para exibir o mapa corretamente, precisamos acessar sua localização.
+                            </p>
+                            <span className="gps-subtext">
+                                Aguarde enquanto buscamos sua posição...
+                            </span>
+                        </>
+                    )}
                 </div>
             </div>
         );

@@ -190,24 +190,26 @@ function MapView() {
         return (
             <div className="gps-screen">
                 <div className="gps-card">
-                    <div className="loader"></div>
-
-                    <h2>Encontrando sua localização</h2>
-
-                    <p>
-                        Para exibir o mapa corretamente, precisamos acessar sua localização.
-                    </p>
-
-                    <span className="gps-subtext">
-                        Permita o acesso à localização no navegador.
-                    </span>
-
-                    <button
-                        className="gps-retry-btn"
-                        onClick={solicitarLocalizacao}
-                    >
-                        Tentar novamente
-                    </button>
+                {erroLocalizacao ? (
+                        <>
+                            <h2>Não foi possível acessar sua localização</h2>
+                    
+                            <button className="gps-retry-btn" onClick={solicitarLocalizacao}>
+                                Tentar novamente
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <div className="loader"></div>
+                            <h2>Encontrando sua localização</h2>
+                            <p>
+                                Para exibir o mapa corretamente, precisamos acessar sua localização.
+                            </p>
+                            <span className="gps-subtext">
+                                Aguarde enquanto buscamos sua posição...
+                            </span>
+                        </>
+                    )}
                 </div>
             </div>
         );

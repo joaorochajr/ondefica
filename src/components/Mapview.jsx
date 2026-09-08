@@ -74,6 +74,8 @@ function FocoDinamico({ coordenadas }) {
 
 function MapView() {
     const [position, setPosition] = useState(null)
+    const [erroLocalizacao, setErroLocalizacao] = useState(null);
+    const [position, setPosition] = useState(null)
     const [eventos, setEventos] = useState([])
     const [stands, setStands] = useState([])
     const [eventoAtivoId, setEventoAtivoId] = useState(null)

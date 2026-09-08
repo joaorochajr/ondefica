@@ -122,7 +122,7 @@ function MapView() {
             },
             (err) => {
                 console.error("Erro ao obter localização:", err);
-            }
+            },
             {
                 enableHighAccuracy: true,
                 maximumAge: 0

@@ -259,7 +259,7 @@ export default function SearchEventMap({ eventos, onSelectEvento, buscaAberta, s
                                     >
                                         <div style={styles.itemTitle}>{evento.descricao}</div>
                                         <div style={styles.itemMeta}>
-                                            📅 {new Date(evento.data_inicio).toLocaleDateString('pt-BR')} → {new Date(evento.data_fim).toLocaleDateString('pt-BR')}
+                                            📅 {new Date(evento.data_inicio).toLocaleDateString('pt-BR', { timeZone: 'UTC' })} → {new Date(evento.data_fim).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
                                         </div>
                                         {evento.quantidadeStands > 0 && (
                                             <div style={styles.itemStands}>

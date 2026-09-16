@@ -127,6 +127,38 @@
   color: #888;
 }
 
+/* aviso de instruções para liberar a localização */
+.gps-instrucoes {
+  width: 100%;
+  background: #f5f8fa;
+  border: 1px solid #e0e6eb;
+  border-radius: 10px;
+  padding: 14px 16px;
+  text-align: left;
+}
+
+.gps-instrucoes-titulo {
+  display: block;
+  font-weight: 700;
+  font-size: 14px;
+  color: #1a1a1a;
+  margin-bottom: 8px;
+}
+
+.gps-instrucoes ol {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gps-instrucoes li {
+  font-size: 13.5px;
+  color: #555;
+  line-height: 1.4;
+}
+
 /* loader */
 .loader {
   width: 28px;

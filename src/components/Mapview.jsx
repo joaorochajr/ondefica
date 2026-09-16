@@ -123,7 +123,7 @@ function MapView() {
             },
             (err) => {
                 console.error("Erro ao obter localização:", err);
-                setErroLocalizacao(true);
+                setErroLocalizacao(err.code || true); //Isso guarda o código do erro do navegador
             },
             {
                 enableHighAccuracy: true,
@@ -192,7 +192,29 @@ if (!position) {
     return (
         <div className="gps-screen">
             <div className="gps-card">
-                {erroLocalizacao ? (
+                {erroLocalizacao === 1 ? ( //aviso com instruções do que o usuario deve fazer caso a permissão à localização seja negada
+                    <>
+                        <h2>Não conseguimos acessar sua localização</h2>
+                        <p>
+                            Você negou a permissão de localização para este site.
+                            Para usar o mapa, você precisa liberar o acesso manualmente.
+                        </p>
+                        <div className="gps-instrucoes">
+                            <span className="gps-instrucoes-titulo">
+                                🔒 Como liberar o acesso:
+                            </span>
+                            <ol>
+                                <li>Clique no ícone de cadeado (🔒) que fica ao lado do endereço do site, na barra de busca do navegador.</li>
+                                <li>Procure a opção <strong>"Localização"</strong> nas permissões do site.</li>
+                                <li>Altere de <strong>"Bloquear"</strong> para <strong>"Permitir"</strong>.</li>
+                                <li>Recarregue a página, se necessário.</li>
+                            </ol>
+                        </div>
+                        <span className="gps-subtext">
+                            Assim que a permissão for liberada, tentaremos localizar você automaticamente.
+                        </span>
+                    </>
+                ) : erroLocalizacao ? (
                     <>
                         <h2>Não conseguimos acessar sua localização</h2>
 

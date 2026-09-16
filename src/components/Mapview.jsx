@@ -588,6 +588,12 @@ if (!position) {
                         >
                             <Popup>
                                 <strong>{evento.descricao}</strong>
+                                {evento.nome_local && (
+                                    <>
+                                        <br />
+                                        <span>{evento.nome_local}</span>
+                                    </>
+                                )}
                                 <br />
                                 {/* ... conteúdo do popup ... */}
                                 {evento.quantidadeStands > 0 ? (

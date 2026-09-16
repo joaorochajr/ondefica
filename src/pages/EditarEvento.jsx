@@ -23,6 +23,7 @@ function EditarEvento() {
   const navigate = useNavigate()
 
   const [descricao, setDescricao] = useState('')
+  const [nomeLocal, setNomeLocal] = useState('') //adição de estado para local
   const [dataInicio, setDataInicio] = useState('')
   const [dataFim, setDataFim] = useState('')
   const [posicao, setPosicao] = useState(null)
@@ -54,6 +55,7 @@ function EditarEvento() {
         if (res.ok) {
           const data = await res.json()
           setDescricao(data.descricao)
+          setNomeLocal(data.nome_local || '')
           setDataInicio(data.data_inicio.split('T')[0])
           setDataFim(data.data_fim.split('T')[0])
           setPosicao({ lat: data.latitude, lng: data.longitude })
@@ -145,6 +147,7 @@ function EditarEvento() {
     try {
       const res = await eventosService.atualizar(id, {
         descricao,
+        nome_local: nomeLocal,
         data_inicio: dataInicio,
         data_fim: dataFim,
         latitude: posicao.lat,
@@ -201,6 +204,11 @@ function EditarEvento() {
           <div className="form-group">
             <label className="form-label">Descrição do Evento</label>
             <input type="text" required value={descricao} onChange={(e) => setDescricao(e.target.value)} className="form-input" />
+          </div>
+
+           <div className="form-group">
+            <label className="form-label">Nome do Local</label>
+            <input type="text" placeholder="Ex: Ginásio Municipal, Praça Central..." required value={nomeLocal} onChange={(e) => setNomeLocal(e.target.value)} className="form-input" />
           </div>
 
           <div className="form-row">

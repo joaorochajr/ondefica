@@ -22,6 +22,7 @@ function LocationMarker({ position, setPosition }) {
 function CriarEvento() {
   const navigate = useNavigate()
   const [descricao, setDescricao] = useState('')
+  const [nomeLocal, setNomeLocal] = useState('') //estado novo para guardar nome do local
   const [dataInicio, setDataInicio] = useState('')
   const [dataFim, setDataFim] = useState('')
   const [emailInput, setEmailInput] = useState('')
@@ -129,6 +130,7 @@ function CriarEvento() {
     try {
       const res = await eventosService.criar({
         descricao,
+        nome_local: nomeLocal, //adição de campo para envio ao backend
         data_inicio: dataInicio,
         data_fim: dataFim,
         latitude: posicao.lat,
@@ -203,6 +205,12 @@ function CriarEvento() {
           <div className="form-group">
             <label className="form-label">Descrição do Evento</label>
             <input type="text" placeholder="Ex: Feira de Ciências" required value={descricao} onChange={(e) => setDescricao(e.target.value)} className="form-input" />
+          </div>
+
+          //adição de campo de evento no formulario
+          <div className="form-group">
+            <label className="form-label">Nome do Local</label>
+            <input type="text" placeholder="Ex: Ginásio Municipal, Praça Central..." required value={nomeLocal} onChange={(e) => setNomeLocal(e.target.value)} className="form-input" />
           </div>
 
           <div className="form-row">

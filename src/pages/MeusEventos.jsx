@@ -69,6 +69,9 @@ function MeusEventos() {
               <div key={evento._id} className="evento-card">
                 <div>
                   <h3 className="evento-card__title">{evento.descricao}</h3>
+                  {evento.nome_local && (
+                    <p className="evento-card__local">📍 {evento.nome_local}</p>
+                  )}
                   <p className="evento-card__date">
                     <span className="evento-card__date-icon">📅</span>
                     <strong>Início:</strong>&nbsp;{new Date(evento.data_inicio).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}

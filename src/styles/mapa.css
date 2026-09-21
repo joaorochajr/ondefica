@@ -1,5 +1,39 @@
 /* mapa.css */
 
+
+.leaflet-popup {
+    width: auto !important;
+    max-width: 35vw !important; 
+    min-width: 260px !important; 
+}
+
+.leaflet-popup-content-wrapper {
+    width: 100% !important;
+    max-height: 45vh !important; 
+    border-radius: 12px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+
+.leaflet-popup-content {
+    width: auto !important;
+    max-height: calc(45vh - 20px) !important;
+    margin: 12px !important;
+    overflow-y: auto !important;  
+    box-sizing: border-box !important;
+}
+
+
+.leaflet-popup-content img {
+    width: 100% !important;
+    height: 110px !important;
+    object-fit: cover !important;
+    border-radius: 6px !important;
+}
+
 .map-wrapper {
   height: 100vh;
   width: 100%;

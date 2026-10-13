@@ -131,6 +131,7 @@ function CriarEvento() {
       const res = await eventosService.criar({
         descricao,
         nome_local: nomeLocal, //adição de campo para envio ao backend
+        nome_endereco: enderecoBusca,
         data_inicio: dataInicio,
         data_fim: dataFim,
         latitude: posicao.lat,

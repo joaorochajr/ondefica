@@ -32,6 +32,7 @@ function EditarEvento() {
   const [colaboradores, setColaboradores] = useState([])
   const [meuEmail, setMeuEmail] = useState('')
   const [enderecoBusca, setEnderecoBusca] = useState('')
+  const [nomeEndereco, setNomeEndereco] = useState('')
   const [sugestoes, setSugestoes] = useState([])
   const [buscando, setBuscando] = useState(false)
   const [validandoEmail, setValidandoEmail] = useState(false)
@@ -56,6 +57,7 @@ function EditarEvento() {
           const data = await res.json()
           setDescricao(data.descricao)
           setNomeLocal(data.nome_local || '')
+          setNomeEndereco(data.nome_endereco || '')
           setDataInicio(data.data_inicio.split('T')[0])
           setDataFim(data.data_fim.split('T')[0])
           setPosicao({ lat: data.latitude, lng: data.longitude })
@@ -96,6 +98,7 @@ function EditarEvento() {
   const selecionarEndereco = (item) => {
     setPosicao({ lat: parseFloat(item.lat), lng: parseFloat(item.lon) })
     setEnderecoBusca(item.display_name)
+    setNomeEndereco(item.display_name)
     setSugestoes([])
   }
 
@@ -148,6 +151,7 @@ function EditarEvento() {
       const res = await eventosService.atualizar(id, {
         descricao,
         nome_local: nomeLocal,
+        nome_endereco: nomeEndereco,
         data_inicio: dataInicio,
         data_fim: dataFim,
         latitude: posicao.lat,
@@ -251,6 +255,7 @@ function EditarEvento() {
             <div className="form-search-wrapper">
               <input type="text" placeholder="Digite para alterar o endereço atual..." value={enderecoBusca} onChange={(e) => setEnderecoBusca(e.target.value)} className="form-input" />
               {buscando && <small className="form-search-loading">Buscando...</small>}
+              {nomeEndereco && <small className="form-search-loading">Endereço atual: {nomeEndereco}</small>}
               {sugestoes.length > 0 && (
                 <ul className="form-dropdown">
                   {sugestoes.map((item, i) => (

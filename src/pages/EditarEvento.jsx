@@ -255,7 +255,6 @@ function EditarEvento() {
             <div className="form-search-wrapper">
               <input type="text" placeholder="Digite para alterar o endereço atual..." value={enderecoBusca} onChange={(e) => setEnderecoBusca(e.target.value)} className="form-input" />
               {buscando && <small className="form-search-loading">Buscando...</small>}
-              {nomeEndereco && <small className="form-search-loading">Endereço atual: {nomeEndereco}</small>}
               {sugestoes.length > 0 && (
                 <ul className="form-dropdown">
                   {sugestoes.map((item, i) => (
@@ -264,6 +263,7 @@ function EditarEvento() {
                 </ul>
               )}
             </div>
+            {nomeEndereco && <small className="form-endereco-atual">Endereço atual: {nomeEndereco}</small>}
           </div>
 
           <div className="form-group">

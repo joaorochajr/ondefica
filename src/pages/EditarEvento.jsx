@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -32,7 +32,7 @@ function EditarEvento() {
   const [colaboradores, setColaboradores] = useState([])
   const [meuEmail, setMeuEmail] = useState('')
   const [enderecoBusca, setEnderecoBusca] = useState('')
-  const [nomeEndereco, setNomeEndereco] = useState('')
+  const enderecoConfirmado = useRef('')
   const [sugestoes, setSugestoes] = useState([])
   const [buscando, setBuscando] = useState(false)
   const [validandoEmail, setValidandoEmail] = useState(false)
@@ -57,7 +57,8 @@ function EditarEvento() {
           const data = await res.json()
           setDescricao(data.descricao)
           setNomeLocal(data.nome_local || '')
-          setNomeEndereco(data.nome_endereco || '')
+          enderecoConfirmado.current = data.nome_endereco || ''
+          setEnderecoBusca(data.nome_endereco || '')
           setDataInicio(data.data_inicio.split('T')[0])
           setDataFim(data.data_fim.split('T')[0])
           setPosicao({ lat: data.latitude, lng: data.longitude })
@@ -87,6 +88,11 @@ function EditarEvento() {
       finally { setBuscando(false) }
     }
 
+    if (enderecoBusca === enderecoConfirmado.current) {
+      setSugestoes([])
+      return
+    }
+
     const timer = setTimeout(() => {
       if (enderecoBusca.length > 3) buscar(enderecoBusca)
       else setSugestoes([])
@@ -97,8 +103,8 @@ function EditarEvento() {
 
   const selecionarEndereco = (item) => {
     setPosicao({ lat: parseFloat(item.lat), lng: parseFloat(item.lon) })
+    enderecoConfirmado.current = item.display_name
     setEnderecoBusca(item.display_name)
-    setNomeEndereco(item.display_name)
     setSugestoes([])
   }
 
@@ -151,7 +157,7 @@ function EditarEvento() {
       const res = await eventosService.atualizar(id, {
         descricao,
         nome_local: nomeLocal,
-        nome_endereco: nomeEndereco,
+        nome_endereco: enderecoConfirmado.current,
         data_inicio: dataInicio,
         data_fim: dataFim,
         latitude: posicao.lat,
@@ -263,7 +269,6 @@ function EditarEvento() {
                 </ul>
               )}
             </div>
-            {nomeEndereco && <small className="form-endereco-atual">Endereço atual: {nomeEndereco}</small>}
           </div>
 
           <div className="form-group">

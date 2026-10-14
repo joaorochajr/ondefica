@@ -33,6 +33,25 @@ function CriarEvento() {
   const [buscando, setBuscando] = useState(false)
   const [meuEmail, setMeuEmail] = useState('')
   const [validandoEmail, setValidandoEmail] = useState(false)
+    const [meusEventos, setMeusEventos] = useState([])
+  const [origemId, setOrigemId] = useState('')
+
+  useEffect(() => {
+    eventosService.meus()
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setMeusEventos)
+      .catch(() => setMeusEventos([]))
+  }, [])
+
+  const escolherOrigem = (id) => {
+    setOrigemId(id)
+    const origem = meusEventos.find((e) => e._id === id)
+    if (!origem) return
+    // Pré-preenche o local para o usuário só ajustar o que mudou
+    setNomeLocal(origem.nome_local || '')
+    setEnderecoBusca(origem.nome_endereco || '')
+    setPosicao({ lat: origem.latitude, lng: origem.longitude })
+  }
 
   useEffect(() => {
     usuariosService
@@ -137,6 +156,7 @@ function CriarEvento() {
         latitude: posicao.lat,
         longitude: posicao.lng,
         colaboradores,
+        copiarStandsDe: origemId || undefined,
       })
 
 
@@ -159,24 +179,26 @@ function CriarEvento() {
       const criado = await res.json()
       const eventoId = criado._id || criado.id
 
-      const formData = new FormData();
+            if (!origemId) {
+        const formData = new FormData();
 
-      formData.append('nome', "Centro do evento");
-      formData.append('descricao', '');
-      formData.append('data_inicio', dataInicio);
-      formData.append('data_fim', dataFim);
-      formData.append('eventoId', eventoId);
-      formData.append('cor_icone', 'blue');
+        formData.append('nome', "Centro do evento");
+        formData.append('descricao', '');
+        formData.append('data_inicio', dataInicio);
+        formData.append('data_fim', dataFim);
+        formData.append('eventoId', eventoId);
+        formData.append('cor_icone', 'blue');
 
-      const lat = posicao.lat;
-      const lng = posicao.lng;
-      
-      formData.append('latitude', lat);
-      formData.append('longitude', lng);
+        const lat = posicao.lat;
+        const lng = posicao.lng;
 
-      const resStand = await standsService.criar(formData);
+        formData.append('latitude', lat);
+        formData.append('longitude', lng);
 
-      if (!resStand.ok) { alert('Erro ao criar stand do evento.'); return }
+        const resStand = await standsService.criar(formData);
+
+        if (!resStand.ok) { alert('Erro ao criar stand do evento.'); return }
+      }
 
       let msg = criado.message || 'Evento criado com sucesso!'
       if (criado.emailsNaoEncontrados?.length > 0) {
@@ -203,6 +225,20 @@ function CriarEvento() {
                 handleSalvar()
               }}
         >
+        <div className="form-group">
+          <label className="form-label">Copiar stands de um evento existente (opcional)</label>
+          <select
+             className="form-input"
+            value={origemId}
+            onChange={(e) => escolherOrigem(e.target.value)}
+          >
+            <option value="">Começar do zero</option>
+            {meusEventos.map((ev) => (
+              <option key={ev._id} value={ev._id}>{ev.descricao}</option>
+            ))}
+          </select>
+        </div>
+        
           <div className="form-group">
             <label className="form-label">Descrição do Evento</label>
             <input type="text" placeholder="Ex: Feira de Ciências" required value={descricao} onChange={(e) => setDescricao(e.target.value)} className="form-input" />

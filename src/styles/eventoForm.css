@@ -82,11 +82,6 @@
   font-size: var(--font-size-sm);
 }
 
-.form-endereco-atual {
-  color: var(--color-text-light);
-  font-size: var(--font-size-sm);
-}
-
 .form-dropdown {
   position: absolute;
   top: 100%;

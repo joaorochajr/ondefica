@@ -1,5 +1,17 @@
 import { useState } from 'react';
 
+// true se o evento já terminou (as datas são salvas como meia-noite UTC do dia)
+function eventoEncerrado(evento) {
+    const hoje = new Date().toLocaleDateString('en-CA'); // AAAA-MM-DD no horário local
+    return (evento.data_fim || '').slice(0, 10) < hoje;
+}
+
+const OPCOES_SITUACAO = [
+    { valor: 'proximos', rotulo: 'Próximos' },
+    { valor: 'passados', rotulo: 'Passados' },
+    { valor: 'todos', rotulo: 'Todos' }
+];
+
 const styles = {
     container: {
         position: 'absolute',
@@ -72,7 +84,7 @@ const styles = {
         borderRadius: '4px',
         boxShadow: '0 1px 5px rgba(0,0,0,0.65)',
         width: '239px',
-        maxHeight: '260px',
+        maxHeight: '380px',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden'
@@ -132,11 +144,81 @@ const styles = {
         fontSize: '14px',
         color: '#999',
         backgroundColor: 'white'
+    },
+    filtros: {
+        padding: '8px 12px',
+        borderBottom: '1px solid #eee',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '6px'
+    },
+    abas: {
+        display: 'flex',
+        gap: '4px'
+    },
+    aba: {
+        flex: 1,
+        height: '28px',
+        border: '1px solid #cbd5e1',
+        borderRadius: '4px',
+        background: 'white',
+        color: '#475569',
+        fontSize: '12px',
+        cursor: 'pointer'
+    },
+    abaAtiva: {
+        background: '#1976D2',
+        borderColor: '#1976D2',
+        color: 'white',
+        fontWeight: 'bold'
+    },
+    linhaData: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+        fontSize: '12px',
+        color: '#666'
+    },
+    rotuloData: {
+        width: '26px'
+    },
+    inputData: {
+        flex: 1,
+        minWidth: 0,
+        height: '28px',
+        padding: '0 6px',
+        border: '1px solid #cbd5e1',
+        borderRadius: '4px',
+        fontSize: '12px'
+    },
+    aviso: {
+        fontSize: '12px',
+        color: '#d32f2f'
+    },
+    limparPeriodo: {
+        alignSelf: 'flex-start',
+        background: 'none',
+        border: 'none',
+        padding: 0,
+        color: '#1976D2',
+        fontSize: '12px',
+        cursor: 'pointer',
+        textDecoration: 'underline'
+    },
+    tagEncerrado: {
+        fontSize: '11px',
+        color: '#888',
+        marginLeft: '6px',
+        fontWeight: 'normal'
     }
 };
 
-export default function SearchEventMap({ eventos, onSelectEvento, buscaAberta, setBuscaAberta }) {
+export default function SearchEventMap({ eventos, onSelectEvento, buscaAberta, setBuscaAberta, filtros, setFiltros, carregando }) {
     const [termoBusca, setTermoBusca] = useState('');
+
+    const temPeriodo = Boolean(filtros.de || filtros.ate);
+    const filtroAtivo = filtros.situacao !== 'proximos' || temPeriodo;
+    const periodoInvalido = Boolean(filtros.de && filtros.ate && filtros.de > filtros.ate);
     const [itemFocadoId, setItemFocadoId] = useState(null);
     const [painelEventosAberto, setPainelEventosAberto] = useState(false);
 
@@ -222,7 +304,7 @@ export default function SearchEventMap({ eventos, onSelectEvento, buscaAberta, s
                     onClick={() => setPainelEventosAberto(true)}
                     style={styles.btnVerEventos}
                 >
-                    📅 Ver Eventos
+                    📅 Ver Eventos{filtroAtivo ? ' (filtro ativo)' : ''}
                 </button>
             )}
 
@@ -236,9 +318,64 @@ export default function SearchEventMap({ eventos, onSelectEvento, buscaAberta, s
                     <div style={styles.header}
                     onTouchStart={(e) => e.stopPropagation()}>
                         <span style={styles.headerText}>
-                            {eventos.length} evento{eventos.length !== 1 ? 's' : ''}
+                            {carregando
+                                ? 'Carregando...'
+                                : `${eventos.length} evento${eventos.length !== 1 ? 's' : ''}`}
                         </span>
                         <button onClick={fecharPainel} style={styles.closeBtn}>✕</button>
+                    </div>
+
+                    {/* Filtros: próximos / passados / todos + período */}
+                    <div style={styles.filtros}>
+                        <div style={styles.abas}>
+                            {OPCOES_SITUACAO.map((opcao) => (
+                                <button
+                                    key={opcao.valor}
+                                    onClick={() => setFiltros({ ...filtros, situacao: opcao.valor })}
+                                    style={{
+                                        ...styles.aba,
+                                        ...(filtros.situacao === opcao.valor ? styles.abaAtiva : {})
+                                    }}
+                                >
+                                    {opcao.rotulo}
+                                </button>
+                            ))}
+                        </div>
+
+                        <label style={styles.linhaData}>
+                            <span style={styles.rotuloData}>De</span>
+                            <input
+                                type="date"
+                                value={filtros.de}
+                                max={filtros.ate || undefined}
+                                onChange={(e) => setFiltros({ ...filtros, de: e.target.value })}
+                                style={styles.inputData}
+                            />
+                        </label>
+
+                        <label style={styles.linhaData}>
+                            <span style={styles.rotuloData}>Até</span>
+                            <input
+                                type="date"
+                                value={filtros.ate}
+                                min={filtros.de || undefined}
+                                onChange={(e) => setFiltros({ ...filtros, ate: e.target.value })}
+                                style={styles.inputData}
+                            />
+                        </label>
+
+                        {periodoInvalido && (
+                            <div style={styles.aviso}>A data "De" precisa ser antes da data "Até".</div>
+                        )}
+
+                        {temPeriodo && (
+                            <button
+                                onClick={() => setFiltros({ ...filtros, de: '', ate: '' })}
+                                style={styles.limparPeriodo}
+                            >
+                                Limpar período
+                            </button>
+                        )}
                     </div>
 
                     <div style={styles.painelList}>
@@ -257,7 +394,12 @@ export default function SearchEventMap({ eventos, onSelectEvento, buscaAberta, s
                                         onMouseLeave={() => setItemFocadoId(null)}
                                         style={{ ...styles.item, background: focado ? '#f5f5f5' : 'white' }}
                                     >
-                                        <div style={styles.itemTitle}>{evento.descricao}</div>
+                                        <div style={styles.itemTitle}>
+                                            {evento.descricao}
+                                            {eventoEncerrado(evento) && (
+                                                <span style={styles.tagEncerrado}>(encerrado)</span>
+                                            )}
+                                        </div>
                                         <div style={styles.itemMeta}>
                                             📅 {new Date(evento.data_inicio).toLocaleDateString('pt-BR', { timeZone: 'UTC' })} → {new Date(evento.data_fim).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
                                         </div>
@@ -270,7 +412,13 @@ export default function SearchEventMap({ eventos, onSelectEvento, buscaAberta, s
                                 );
                             })
                         ) : (
-                            <div style={styles.emptyItem}>Nenhum evento disponível</div>
+                            <div style={styles.emptyItem}>
+                                {carregando
+                                    ? 'Carregando...'
+                                    : filtroAtivo
+                                        ? 'Nenhum evento encontrado com esse filtro'
+                                        : 'Nenhum evento disponível'}
+                            </div>
                         )}
                     </div>
                 </div>

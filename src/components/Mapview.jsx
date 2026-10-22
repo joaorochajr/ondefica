@@ -12,6 +12,12 @@ import TracarRotaApe from './TracarRotaApe';
 import StandModal from './StandModal';
 import SearchEventMap from './searchEventMap';
 
+// true se o evento já terminou (as datas são salvas como meia-noite UTC do dia)
+function eventoEncerrado(evento) {
+    const hoje = new Date().toLocaleDateString('en-CA'); // AAAA-MM-DD no horário local
+    return (evento.data_fim || '').slice(0, 10) < hoje;
+}
+
 import '../styles/mapa.css'
 
 // fix icon
@@ -76,6 +82,9 @@ function MapView() {
     const [erroLocalizacao, setErroLocalizacao] = useState(null);
     const [position, setPosition] = useState(null)
     const [eventos, setEventos] = useState([])
+    // Filtro da lista de eventos: próximos (padrão) ou passados, com período opcional
+    const [filtrosEventos, setFiltrosEventos] = useState({ situacao: 'proximos', de: '', ate: '' })
+    const [carregandoEventos, setCarregandoEventos] = useState(false)
     const [stands, setStands] = useState([])
     const [eventoAtivoId, setEventoAtivoId] = useState(null)
     const [modoStands, setModoStands] = useState(false)
@@ -99,17 +108,30 @@ function MapView() {
     const watchIdRef = useRef(null); // guarda o watch ativo, pra dar clearWatch antes de abrir outro (evita empilhar watchers a cada "tentar novamente")
 
     useEffect(() => {
+        // Período incompleto ou invertido (início depois do fim): espera o usuário corrigir
+        if (filtrosEventos.de && filtrosEventos.ate && filtrosEventos.de > filtrosEventos.ate) return;
+
+        let cancelado = false;
+
         async function load() {
+            setCarregandoEventos(true);
             try {
-                const res = await eventosService.listar()
-                setEventos(await res.json());
+                const res = await eventosService.listar(filtrosEventos)
+                const dados = await res.json();
+                if (!cancelado) setEventos(res.ok && Array.isArray(dados) ? dados : []);
             } catch (error) {
                 console.error("Erro ao buscar dados da API:", error);
+                if (!cancelado) setEventos([]);
+            } finally {
+                if (!cancelado) setCarregandoEventos(false);
             }
         }
 
         load();
-    }, []);
+
+        // se o filtro mudar antes da resposta chegar, ignora a resposta antiga
+        return () => { cancelado = true; };
+    }, [filtrosEventos]);
 
     // pede a localização ao navegador; 
     function solicitarLocalizacao() {
@@ -548,6 +570,9 @@ if (!position) {
                 {!modoStands && (
                     <SearchEventMap
                         eventos={eventos}
+                        filtros={filtrosEventos}
+                        setFiltros={setFiltrosEventos}
+                        carregando={carregandoEventos}
                         buscaAberta={buscaAberta}
                         setBuscaAberta={setBuscaAberta}
                         onSelectEvento={(evento) => {
@@ -592,6 +617,14 @@ if (!position) {
                                     <>
                                         <br />
                                         <span>{evento.nome_local}</span>
+                                    </>
+                                )}
+                                {eventoEncerrado(evento) && (
+                                    <>
+                                        <br />
+                                        <span style={{ fontSize: '12px', color: '#888' }}>
+                                            Evento encerrado em {new Date(evento.data_fim).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
+                                        </span>
                                     </>
                                 )}
                                 <br />

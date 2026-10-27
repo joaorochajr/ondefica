@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from 'react-leaflet'
 import L from 'leaflet'
 
 import 'leaflet/dist/leaflet.css'
@@ -78,7 +78,7 @@ function FocoDinamico({ coordenadas }) {
     return null;
 }
 
-function MapView() {
+function MapView({ acoesUsuario, itensMenuMobile }) {
     const [erroLocalizacao, setErroLocalizacao] = useState(null);
     const [position, setPosition] = useState(null)
     const [eventos, setEventos] = useState([])
@@ -553,6 +553,10 @@ if (!position) {
                 )
             )}
 
+            {modoStands && (
+                <div className="map-user-box">{acoesUsuario}</div>
+            )}
+
             <StandModal
                 stand={standSelecionado}
                 onClose={() => setStandSelecionado(null)}
@@ -566,9 +570,14 @@ if (!position) {
                 center={position}
                 zoom={13}
                 style={{ height: '100vh', width: '100%' }}
+                zoomControl={false}
             >
+                <ZoomControl position="bottomright" />
+
                 {!modoStands && (
                     <SearchEventMap
+                        acoesUsuario={acoesUsuario}
+                        itensMenuMobile={itensMenuMobile}
                         eventos={eventos}
                         filtros={filtrosEventos}
                         setFiltros={setFiltrosEventos}

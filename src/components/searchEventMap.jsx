@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useEhMobile } from '../utils/useEhMobile';
+import { IconeBusca, IconeCalendario, IconeMenu, IconeFechar } from './Icones';
 
 // true se o evento já terminou (as datas são salvas como meia-noite UTC do dia)
 function eventoEncerrado(evento) {
@@ -13,66 +15,8 @@ const OPCOES_SITUACAO = [
 ];
 
 const styles = {
-    container: {
-        position: 'absolute',
-        top: '10px',
-        left: '50px',
-        width: '200px',
-        zIndex: 1000,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-start',
-        fontFamily: 'sans-serif',
-        gap: '5px'
-    },
-    wrapper: {
-        width: '80%',
-        display: 'flex',
-        gap: '5px'
-    },
-    button: {
-        height: '34px',
-        background: 'white',
-        border: 'none',
-        borderRadius: '4px',
-        boxShadow: '0 1px 5px rgba(0,0,0,0.65)',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        padding: '0 12px',
-        fontSize: '13px',
-        fontWeight: 'bold',
-        color: '#1976D2',
-        whiteSpace: 'nowrap'
-    },
-    btnVerEventos: {
-        height: '34px',
-        background: 'white',
-        border: 'none',
-        borderRadius: '4px',
-        boxShadow: '0 1px 5px rgba(0,0,0,0.65)',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        padding: '0 12px',
-        fontSize: '13px',
-        fontWeight: 'bold',
-        color: '#1976D2',
-        whiteSpace: 'nowrap'
-    },
-    input: {
-        width: '200px',
-        height: '34px',
-        padding: '0 10px',
-        border: 'none',
-        borderRadius: '4px',
-        boxShadow: '0 1px 5px rgba(0,0,0,0.65)',
-        outline: 'none'
-    },
     resultsContainer: {
-        width: '200px',
+        width: '100%',
         background: 'white',
         borderRadius: '4px',
         boxShadow: '0 1px 5px rgba(0,0,0,0.65)',
@@ -83,7 +27,7 @@ const styles = {
         background: 'white',
         borderRadius: '4px',
         boxShadow: '0 1px 5px rgba(0,0,0,0.65)',
-        width: '239px',
+        width: '100%',
         maxHeight: '380px',
         display: 'flex',
         flexDirection: 'column',
@@ -213,7 +157,9 @@ const styles = {
     }
 };
 
-export default function SearchEventMap({ eventos, onSelectEvento, buscaAberta, setBuscaAberta, filtros, setFiltros, carregando }) {
+export default function SearchEventMap({ eventos, onSelectEvento, buscaAberta, setBuscaAberta, filtros, setFiltros, carregando, acoesUsuario, itensMenuMobile = [] }) {
+    const ehMobile = useEhMobile();
+    const [menuMobileAberto, setMenuMobileAberto] = useState(false);
     const [termoBusca, setTermoBusca] = useState('');
 
     const temPeriodo = Boolean(filtros.de || filtros.ate);
@@ -230,40 +176,101 @@ export default function SearchEventMap({ eventos, onSelectEvento, buscaAberta, s
         setPainelEventosAberto(false);
     }
 
+    function abrirBusca() {
+        setBuscaAberta(true);
+        setPainelEventosAberto(false);
+        setMenuMobileAberto(false);
+    }
+
+    function abrirPainelEventos() {
+        setPainelEventosAberto(true);
+        setBuscaAberta(false);
+        setTermoBusca('');
+        setMenuMobileAberto(false);
+    }
+
     return (
+        <>
         <div
-            style={styles.container}
+            className={ehMobile ? 'map-mobile-topo' : 'map-topbar'}
             onMouseDown={(e) => e.stopPropagation()}
             onDoubleClick={(e) => e.stopPropagation()}
             onWheel={(e) => e.stopPropagation()}
         >
 
-            <div style={{ ...styles.wrapper, height: '34px' }}>
-            {buscaAberta ? (
-                <input
-                    autoFocus
-                    type="text"
-                    placeholder="Buscar evento..."
-                    value={termoBusca}
-                    onChange={(e) => setTermoBusca(e.target.value)}
-                    onBlur={() => {
-                        if (!termoBusca) setBuscaAberta(false);
-                    }}
-                    style={styles.input}
-                />
-            ) : (
-                <button
-                    onClick={() => {
-                        setBuscaAberta(true);
-                        setPainelEventosAberto(false);
-                    }}
-                    style={styles.button}
-                >
-                    <span>🔍</span>
-                    <span>Buscar evento...</span>
-                </button>
+            {/* Barra única (desktop): busca | ver eventos | ajuda | usuário */}
+            {!ehMobile && (
+                <div className="map-topbar-bar">
+                    <label className="map-topbar-search">
+                        <IconeBusca />
+                        <input
+                            type="text"
+                            placeholder="Buscar evento..."
+                            value={termoBusca}
+                            onFocus={() => {
+                                setBuscaAberta(true);
+                                setPainelEventosAberto(false);
+                            }}
+                            onChange={(e) => setTermoBusca(e.target.value)}
+                            onBlur={() => {
+                                if (!termoBusca) setBuscaAberta(false);
+                            }}
+                        />
+                    </label>
+
+                    <button
+                        className="map-topbar-eventos"
+                        onClick={() => {
+                            setPainelEventosAberto(!painelEventosAberto);
+                            setBuscaAberta(false);
+                            setTermoBusca('');
+                        }}
+                    >
+                        <IconeCalendario />
+                        <span>Ver Eventos{filtroAtivo ? ' (filtro ativo)' : ''}</span>
+                    </button>
+
+                    {acoesUsuario}
+                </div>
             )}
-        </div>
+
+            {/* Mobile: lupa redonda ou campo de busca no topo */}
+            {ehMobile && (
+                <div className="map-mobile-topo-conteudo">
+                    {!buscaAberta && !painelEventosAberto && (
+                        <button className="map-mobile-lupa" onClick={abrirBusca} title="Buscar evento">
+                            <IconeBusca />
+                        </button>
+                    )}
+
+                    {buscaAberta && (
+                        <div className="map-mobile-busca">
+                            <label className="map-topbar-search">
+                                <IconeBusca />
+                                <input
+                                    autoFocus
+                                    type="text"
+                                    placeholder="Buscar evento..."
+                                    value={termoBusca}
+                                    onChange={(e) => setTermoBusca(e.target.value)}
+                                    onBlur={() => {
+                                        if (!termoBusca) setBuscaAberta(false);
+                                    }}
+                                />
+                            </label>
+                            <button
+                                className="map-mobile-busca-fechar"
+                                onClick={() => {
+                                    setTermoBusca('');
+                                    setBuscaAberta(false);
+                                }}
+                            >
+                                <IconeFechar size={20} />
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Dropdown da busca por texto */}
             {buscaAberta && termoBusca && (
@@ -296,16 +303,6 @@ export default function SearchEventMap({ eventos, onSelectEvento, buscaAberta, s
                         <div style={styles.emptyItem}>Nenhum evento encontrado</div>
                     )}
                 </div>
-            )}
-
-            {/* Linha 2: botão dedicado "Ver Eventos" — some quando painel está aberto ou lupa aberta */}
-            {!buscaAberta && !painelEventosAberto && (
-                <button
-                    onClick={() => setPainelEventosAberto(true)}
-                    style={styles.btnVerEventos}
-                >
-                    📅 Ver Eventos{filtroAtivo ? ' (filtro ativo)' : ''}
-                </button>
             )}
 
             {/* Painel de listagem de eventos */}
@@ -424,5 +421,53 @@ export default function SearchEventMap({ eventos, onSelectEvento, buscaAberta, s
                 </div>
             )}
         </div>
+
+        {/* MOBILE: botão flutuante com menu que abre pra cima */}
+        {ehMobile && (
+            <>
+                {menuMobileAberto && (
+                    <div className="map-mobile-overlay" onClick={() => setMenuMobileAberto(false)} />
+                )}
+
+                <div className="map-mobile-fab-area">
+                    {menuMobileAberto && (
+                        <div className="map-mobile-itens">
+                            <button className="map-mobile-item" onClick={abrirBusca}>
+                                <span className="map-mobile-item-rotulo">Buscar evento</span>
+                                <span className="map-mobile-item-icone"><IconeBusca /></span>
+                            </button>
+
+                            <button className="map-mobile-item" onClick={abrirPainelEventos}>
+                                <span className="map-mobile-item-rotulo">Ver Eventos</span>
+                                <span className="map-mobile-item-icone"><IconeCalendario /></span>
+                            </button>
+
+                            {itensMenuMobile.map((item) => (
+                                <button
+                                    key={item.chave}
+                                    className="map-mobile-item"
+                                    onClick={() => {
+                                        setMenuMobileAberto(false);
+                                        item.onClick();
+                                    }}
+                                >
+                                    <span className="map-mobile-item-rotulo">{item.rotulo}</span>
+                                    <span className="map-mobile-item-icone">{item.icone}</span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    <button
+                        className="map-mobile-fab"
+                        onClick={() => setMenuMobileAberto(!menuMobileAberto)}
+                        title={menuMobileAberto ? 'Fechar menu' : 'Abrir menu'}
+                    >
+                        {menuMobileAberto ? <IconeFechar size={26} /> : <IconeMenu size={26} />}
+                    </button>
+                </div>
+            </>
+        )}
+        </>
     );
 }

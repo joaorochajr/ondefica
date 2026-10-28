@@ -217,7 +217,9 @@ export default function SearchEventMap({ eventos, onSelectEvento, buscaAberta, s
     const [termoBusca, setTermoBusca] = useState('');
 
     const temPeriodo = Boolean(filtros.de || filtros.ate);
-    const filtroAtivo = filtros.situacao !== 'proximos' || temPeriodo;
+    // Em "Próximos" não existe filtro por período, então só Passados/Todos contam como filtro
+    const filtroAtivo = filtros.situacao !== 'proximos';
+    const nomeFiltro = OPCOES_SITUACAO.find((opcao) => opcao.valor === filtros.situacao)?.rotulo;
     const periodoInvalido = Boolean(filtros.de && filtros.ate && filtros.de > filtros.ate);
     const [itemFocadoId, setItemFocadoId] = useState(null);
     const [painelEventosAberto, setPainelEventosAberto] = useState(false);
@@ -304,7 +306,7 @@ export default function SearchEventMap({ eventos, onSelectEvento, buscaAberta, s
                     onClick={() => setPainelEventosAberto(true)}
                     style={styles.btnVerEventos}
                 >
-                    📅 Ver Eventos{filtroAtivo ? ' (filtro ativo)' : ''}
+                    📅 Ver Eventos{filtroAtivo ? ` (${nomeFiltro})` : ''}
                 </button>
             )}
 
@@ -331,7 +333,14 @@ export default function SearchEventMap({ eventos, onSelectEvento, buscaAberta, s
                             {OPCOES_SITUACAO.map((opcao) => (
                                 <button
                                     key={opcao.valor}
-                                    onClick={() => setFiltros({ ...filtros, situacao: opcao.valor })}
+                                    onClick={() => {
+                                        // Próximos não tem período: ao voltar para ele, limpa as datas
+                                        if (opcao.valor === 'proximos') {
+                                            setFiltros({ situacao: 'proximos', de: '', ate: '' });
+                                        } else {
+                                            setFiltros({ ...filtros, situacao: opcao.valor });
+                                        }
+                                    }}
                                     style={{
                                         ...styles.aba,
                                         ...(filtros.situacao === opcao.valor ? styles.abaAtiva : {})
@@ -342,39 +351,44 @@ export default function SearchEventMap({ eventos, onSelectEvento, buscaAberta, s
                             ))}
                         </div>
 
-                        <label style={styles.linhaData}>
-                            <span style={styles.rotuloData}>De</span>
-                            <input
-                                type="date"
-                                value={filtros.de}
-                                max={filtros.ate || undefined}
-                                onChange={(e) => setFiltros({ ...filtros, de: e.target.value })}
-                                style={styles.inputData}
-                            />
-                        </label>
+                        {/* Período só aparece em Passados e Todos */}
+                        {filtros.situacao !== 'proximos' && (
+                            <>
+                            <label style={styles.linhaData}>
+                                <span style={styles.rotuloData}>De</span>
+                                <input
+                                    type="date"
+                                    value={filtros.de}
+                                    max={filtros.ate || undefined}
+                                    onChange={(e) => setFiltros({ ...filtros, de: e.target.value })}
+                                    style={styles.inputData}
+                                />
+                            </label>
 
-                        <label style={styles.linhaData}>
-                            <span style={styles.rotuloData}>Até</span>
-                            <input
-                                type="date"
-                                value={filtros.ate}
-                                min={filtros.de || undefined}
-                                onChange={(e) => setFiltros({ ...filtros, ate: e.target.value })}
-                                style={styles.inputData}
-                            />
-                        </label>
+                            <label style={styles.linhaData}>
+                                <span style={styles.rotuloData}>Até</span>
+                                <input
+                                    type="date"
+                                    value={filtros.ate}
+                                    min={filtros.de || undefined}
+                                    onChange={(e) => setFiltros({ ...filtros, ate: e.target.value })}
+                                    style={styles.inputData}
+                                />
+                            </label>
 
-                        {periodoInvalido && (
-                            <div style={styles.aviso}>A data "De" precisa ser antes da data "Até".</div>
-                        )}
+                            {periodoInvalido && (
+                                <div style={styles.aviso}>A data "De" precisa ser antes da data "Até".</div>
+                            )}
 
-                        {temPeriodo && (
-                            <button
-                                onClick={() => setFiltros({ ...filtros, de: '', ate: '' })}
-                                style={styles.limparPeriodo}
-                            >
-                                Limpar período
-                            </button>
+                            {temPeriodo && (
+                                <button
+                                    onClick={() => setFiltros({ ...filtros, de: '', ate: '' })}
+                                    style={styles.limparPeriodo}
+                                >
+                                    Limpar período
+                                </button>
+                            )}
+                            </>
                         )}
                     </div>
 

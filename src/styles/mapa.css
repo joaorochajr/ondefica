@@ -364,69 +364,42 @@
   }
 }
 
-/* ===== LISTA DE STANDS (modo stands) =====
-   mesmo padrão do painel de eventos: cabeçalho cinza, itens com título e detalhes */
+/* ===== LISTA DE STANDS (modo stands) ===== */
 .map-lista {
-  background: #ffffff;
-  border-radius: 4px;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
-  width: 100%;
-  max-height: 380px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.map-lista-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6px 12px;
-  border-bottom: 1px solid #eee;
-  background-color: #f8fafc;
-  font-size: 12px;
-  color: #666;
-}
-
-.map-lista-fechar {
-  background: none;
-  border: none;
-  font-size: 16px;
-  color: #666;
-  padding: 4px;
-  cursor: pointer;
-}
-
-.map-lista-corpo {
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-float);
+  max-height: 60vh;
   overflow-y: auto;
-  flex: 1;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  touch-action: pan-y;
+}
+
+.map-lista-info {
+  padding: var(--space-sm) var(--space-lg);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .map-lista-item {
-  padding: 8px 12px;
-  border-bottom: 1px solid #eee;
-  background: #ffffff;
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--color-bg);
   cursor: pointer;
-  transition: background 0.15s ease;
 }
 
 .map-lista-item:hover {
-  background: #f5f5f5;
+  background: var(--color-bg);
 }
 
-.map-lista-titulo {
-  font-size: 14px;
-  color: #333;
-  font-weight: 500;
+.map-lista-item strong {
+  font-size: var(--font-size-md);
+  color: var(--color-text);
 }
 
-.map-lista-desc {
-  margin-top: 2px;
-  font-size: 12px;
-  color: #888;
+.map-lista-item p {
+  margin: var(--space-xs) 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -434,10 +407,23 @@
 }
 
 .map-lista-vazio {
-  padding: 8px 12px;
-  font-size: 14px;
-  color: #999;
-  background: #ffffff;
+  padding: var(--space-xl);
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.map-busca-fechar {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: var(--radius-circle);
+  background: none;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }
 
 /* tela inteira */

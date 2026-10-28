@@ -2,61 +2,54 @@ import { useState } from 'react';
 import { useEhMobile } from '../utils/useEhMobile';
 import { IconeBusca, IconeSeta, IconeMenu, IconeFechar } from './Icones';
 
-// Mesmo visual do painel de eventos (SearchEventMap)
+// Visual da lista de stands (igual ao da versão antiga da busca de stands)
 const styles = {
     painelContainer: {
-        background: 'white',
-        borderRadius: '4px',
-        boxShadow: '0 1px 5px rgba(0,0,0,0.65)',
+        fontFamily: '"Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+        background: '#FFFFFF',
+        borderRadius: '12px',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
         width: '100%',
-        maxHeight: '380px',
+        maxHeight: '60vh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden'
     },
-    painelList: {
+    headerInfo: {
+        padding: '8px 16px',
+        backgroundColor: '#F8FAFC',
+        borderBottom: '1px solid #EAEAEA',
+        fontSize: '12px',
+        color: '#666'
+    },
+    listContainer: {
         overflowY: 'auto',
         flex: 1,
+        scrollbarWidth: 'thin',
         WebkitOverflowScrolling: 'touch',
         overscrollBehavior: 'contain',
         touchAction: 'pan-y'
     },
-    header: {
+    listItem: {
+        padding: '14px 16px',
+        borderBottom: '1px solid #F4F6F8',
+        cursor: 'pointer',
         display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '6px 12px',
-        borderBottom: '1px solid #eee',
-        backgroundColor: '#f8fafc'
+        flexDirection: 'column',
+        gap: '4px',
+        transition: 'background-color 0.2s'
     },
-    headerText: { fontSize: '12px', color: '#666' },
-    closeBtn: {
-        background: 'none',
-        border: 'none',
-        cursor: 'pointer',
-        fontSize: '14px',
-        color: '#666',
-        padding: '0 2px',
-        lineHeight: 1
-    },
-    item: {
-        padding: '8px 12px',
-        cursor: 'pointer',
-        borderBottom: '1px solid #eee',
-        transition: 'background 0.15s ease'
-    },
-    itemTitle: { fontSize: '14px', color: '#333', fontWeight: 500 },
-    itemMeta: {
+    itemTitle: { fontSize: '14px', color: '#1A1A1A', fontWeight: 'bold' },
+    itemDesc: {
+        margin: 0,
         fontSize: '12px',
         color: '#888',
-        marginTop: '2px',
         display: '-webkit-box',
         WebkitLineClamp: 2,
         WebkitBoxOrient: 'vertical',
         overflow: 'hidden'
     },
-    itemStands: { fontSize: '12px', color: '#1976D2', marginTop: '2px' },
-    emptyItem: { padding: '8px 12px', fontSize: '14px', color: '#999', backgroundColor: 'white' }
+    emptyState: { padding: '24px', textAlign: 'center', color: '#888', fontSize: '14px' }
 };
 
 // Barra do topo (desktop) e botão flutuante (mobile) quando o mapa está no modo stands.
@@ -94,14 +87,11 @@ function BarraStands({
             onTouchMove={(e) => e.stopPropagation()}
             onTouchEnd={(e) => e.stopPropagation()}
         >
-            <div style={styles.header}>
-                <span style={styles.headerText}>
-                    {standsVisiveis.length} de {stands.length} stand{stands.length !== 1 ? 's' : ''}
-                </span>
-                <button onClick={fecharBusca} style={styles.closeBtn} title="Fechar">✕</button>
+            <div style={styles.headerInfo}>
+                {standsVisiveis.length} de {stands.length} stands encontrados
             </div>
 
-            <div style={styles.painelList}>
+            <div style={styles.listContainer}>
                 {standsVisiveis.length > 0 ? (
                     standsVisiveis.map((stand) => {
                         const id = stand.id || stand._id;
@@ -112,18 +102,15 @@ function BarraStands({
                                 onClick={() => onSelecionarStand(stand)}
                                 onMouseEnter={() => setItemFocadoId(id)}
                                 onMouseLeave={() => setItemFocadoId(null)}
-                                style={{ ...styles.item, background: focado ? '#f5f5f5' : 'white' }}
+                                style={{ ...styles.listItem, backgroundColor: focado ? '#F4F6F8' : '#FFFFFF' }}
                             >
-                                <div style={styles.itemTitle}>{stand.nome || stand.descricao}</div>
-                                {stand.nome && stand.descricao && (
-                                    <div style={styles.itemMeta}>{stand.descricao}</div>
-                                )}
-                                <div style={styles.itemStands}>📍 Ver no mapa</div>
+                                <strong style={styles.itemTitle}>{stand.nome || stand.descricao}</strong>
+                                {stand.nome && <p style={styles.itemDesc}>{stand.descricao}</p>}
                             </div>
                         );
                     })
                 ) : (
-                    <div style={styles.emptyItem}>Nenhum stand encontrado para esta busca.</div>
+                    <div style={styles.emptyState}>Nenhum stand encontrado para esta busca.</div>
                 )}
             </div>
         </div>

@@ -2,6 +2,63 @@ import { useState } from 'react';
 import { useEhMobile } from '../utils/useEhMobile';
 import { IconeBusca, IconeSeta, IconeMenu, IconeFechar } from './Icones';
 
+// Mesmo visual do painel de eventos (SearchEventMap)
+const styles = {
+    painelContainer: {
+        background: 'white',
+        borderRadius: '4px',
+        boxShadow: '0 1px 5px rgba(0,0,0,0.65)',
+        width: '100%',
+        maxHeight: '380px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden'
+    },
+    painelList: {
+        overflowY: 'auto',
+        flex: 1,
+        WebkitOverflowScrolling: 'touch',
+        overscrollBehavior: 'contain',
+        touchAction: 'pan-y'
+    },
+    header: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '6px 12px',
+        borderBottom: '1px solid #eee',
+        backgroundColor: '#f8fafc'
+    },
+    headerText: { fontSize: '12px', color: '#666' },
+    closeBtn: {
+        background: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        fontSize: '14px',
+        color: '#666',
+        padding: '0 2px',
+        lineHeight: 1
+    },
+    item: {
+        padding: '8px 12px',
+        cursor: 'pointer',
+        borderBottom: '1px solid #eee',
+        transition: 'background 0.15s ease'
+    },
+    itemTitle: { fontSize: '14px', color: '#333', fontWeight: 500 },
+    itemMeta: {
+        fontSize: '12px',
+        color: '#888',
+        marginTop: '2px',
+        display: '-webkit-box',
+        WebkitLineClamp: 2,
+        WebkitBoxOrient: 'vertical',
+        overflow: 'hidden'
+    },
+    itemStands: { fontSize: '12px', color: '#1976D2', marginTop: '2px' },
+    emptyItem: { padding: '8px 12px', fontSize: '14px', color: '#999', backgroundColor: 'white' }
+};
+
 // Barra do topo (desktop) e botão flutuante (mobile) quando o mapa está no modo stands.
 // Mesmo visual do SearchEventMap, mas a busca é por stand e no lugar de "Ver Eventos" tem "Voltar".
 function BarraStands({
@@ -18,6 +75,7 @@ function BarraStands({
 }) {
     const ehMobile = useEhMobile();
     const [menuMobileAberto, setMenuMobileAberto] = useState(false);
+    const [itemFocadoId, setItemFocadoId] = useState(null);
 
     function abrirBusca() {
         setAberta(true);
@@ -31,28 +89,43 @@ function BarraStands({
 
     const lista = aberta && (
         <div
-            className="map-lista"
+            style={styles.painelContainer}
             onTouchStart={(e) => e.stopPropagation()}
             onTouchMove={(e) => e.stopPropagation()}
             onTouchEnd={(e) => e.stopPropagation()}
         >
-            <div className="map-lista-info">
-                {standsVisiveis.length} de {stands.length} stands encontrados
+            <div style={styles.header}>
+                <span style={styles.headerText}>
+                    {standsVisiveis.length} de {stands.length} stand{stands.length !== 1 ? 's' : ''}
+                </span>
+                <button onClick={fecharBusca} style={styles.closeBtn} title="Fechar">✕</button>
             </div>
 
-            {standsVisiveis.length > 0 ? (
-                standsVisiveis.map((stand) => {
-                    const id = stand.id || stand._id;
-                    return (
-                        <div key={id} className="map-lista-item" onClick={() => onSelecionarStand(stand)}>
-                            <strong>{stand.nome || stand.descricao}</strong>
-                            {stand.nome && <p>{stand.descricao}</p>}
-                        </div>
-                    );
-                })
-            ) : (
-                <div className="map-lista-vazio">Nenhum stand encontrado para esta busca.</div>
-            )}
+            <div style={styles.painelList}>
+                {standsVisiveis.length > 0 ? (
+                    standsVisiveis.map((stand) => {
+                        const id = stand.id || stand._id;
+                        const focado = itemFocadoId === id;
+                        return (
+                            <div
+                                key={id}
+                                onClick={() => onSelecionarStand(stand)}
+                                onMouseEnter={() => setItemFocadoId(id)}
+                                onMouseLeave={() => setItemFocadoId(null)}
+                                style={{ ...styles.item, background: focado ? '#f5f5f5' : 'white' }}
+                            >
+                                <div style={styles.itemTitle}>{stand.nome || stand.descricao}</div>
+                                {stand.nome && stand.descricao && (
+                                    <div style={styles.itemMeta}>{stand.descricao}</div>
+                                )}
+                                <div style={styles.itemStands}>📍 Ver no mapa</div>
+                            </div>
+                        );
+                    })
+                ) : (
+                    <div style={styles.emptyItem}>Nenhum stand encontrado para esta busca.</div>
+                )}
+            </div>
         </div>
     );
 

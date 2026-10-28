@@ -40,20 +40,146 @@
   position: relative;
 }
 
+/* fallback: ajuda/login soltos (usado só no modo stands, quando a barra some) */
 .map-user-box {
   position: absolute;
   top: 15px;
   right: 15px;
   z-index: 1000;
   display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-md);
+  background: var(--color-white);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-float);
+}
+
+/* ===== BARRA DO TOPO (modelo desktop) ===== */
+.map-topbar {
+  position: absolute;
+  top: var(--space-lg);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(760px, calc(100% - 2 * var(--space-2xl)));
+  z-index: 1000;
+  display: flex;
   flex-direction: column;
-  align-items: flex-end;
   gap: var(--space-sm);
 }
 
+.map-topbar-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  height: 56px;
+  padding: 0 var(--space-lg);
+  background: var(--color-white);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-float);
+}
+
+.map-topbar-search {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  color: var(--color-text-muted);
+  cursor: text;
+}
+
+.map-topbar-search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--font-family);
+  font-size: var(--font-size-lg);
+  color: var(--color-text);
+}
+
+.map-topbar-eventos {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-family);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+  padding: var(--space-sm);
+  border-radius: var(--radius-md);
+}
+
+.map-topbar-eventos svg {
+  color: var(--color-primary);
+}
+
+.map-topbar-eventos:hover,
+.map-btn-help:hover {
+  background: var(--color-bg);
+}
+
+.map-btn-help {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: var(--radius-circle);
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.map-user {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.map-btn-login {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-family);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text);
+  padding: 0;
+}
+
+.map-login-icone {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-circle);
+  background: var(--color-border-input);
+  color: var(--color-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* zoom no canto inferior direito, como no modelo */
+.leaflet-bottom.leaflet-right .leaflet-control-zoom {
+  margin-right: var(--space-lg);
+  margin-bottom: var(--space-3xl);
+}
+
 .map-avatar {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: var(--radius-circle);
   background: #333;
   color: var(--color-white);
@@ -65,6 +191,10 @@
 }
 
 .map-menu {
+  position: absolute;
+  top: calc(100% + var(--space-md));
+  right: 0;
+  min-width: 140px;
   background: var(--color-white);
   padding: 10px;
   border-radius: var(--radius-md);
@@ -88,30 +218,150 @@
   background: var(--color-bg);
 }
 
-.map-btn-login {
-  padding: 12px 22px;
-  border-radius: var(--radius-sm);
-  border: none;
-  background: var(--color-primary);
-  color: var(--color-white);
-  cursor: pointer;
+
+
+/* ===== MOBILE (celular e tablet) =====
+   a largura 900px precisa bater com LARGURA_MAX_MOBILE em utils/useEhMobile.js */
+
+.map-mobile-topo {
+  position: absolute;
+  top: var(--space-lg);
+  left: var(--space-lg);
+  right: var(--space-lg);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  pointer-events: none;
 }
 
+.map-mobile-topo > * {
+  pointer-events: auto;
+}
 
-.map-btn-help {
-  width: 36px;
-  height: 36px;
+.map-mobile-topo-conteudo {
+  display: flex;
+}
+
+.map-mobile-lupa {
+  width: 48px;
+  height: 48px;
   border-radius: var(--radius-circle);
+  border: none;
   background: var(--color-white);
-  border: 1px solid var(--color-border);
   color: var(--color-primary);
-  font-weight: 700;
-  font-size: var(--font-size-lg);
-  cursor: pointer;
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-float);
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+}
+
+.map-mobile-busca {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  height: 48px;
+  padding: 0 var(--space-md) 0 var(--space-lg);
+  background: var(--color-white);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-float);
+}
+
+.map-mobile-busca-fechar {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-circle);
+  background: none;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.map-mobile-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1100;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.map-mobile-fab-area {
+  position: absolute;
+  right: var(--space-lg);
+  bottom: var(--space-3xl);
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-lg);
+}
+
+.map-mobile-itens {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-lg);
+  /* alinha o centro dos botões pequenos com o do botão grande */
+  margin-right: 6px;
+}
+
+.map-mobile-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: var(--font-family);
+}
+
+.map-mobile-item-rotulo {
+  color: var(--color-white);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+}
+
+.map-mobile-item-icone {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-circle);
+  background: var(--color-primary);
+  color: var(--color-white);
+  box-shadow: var(--shadow-float);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.map-mobile-fab {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-circle);
+  border: none;
+  background: var(--color-primary);
+  color: var(--color-white);
+  box-shadow: 0 4px 12px var(--color-primary-shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+@media (max-width: 900px) {
+  /* zoom sobe pra não ficar embaixo do botão flutuante */
+  .leaflet-bottom.leaflet-right .leaflet-control-zoom {
+    margin-bottom: 104px;
+  }
+
+  .leaflet-popup {
+    max-width: 85vw !important;
+  }
 }
 
 /* tela inteira */

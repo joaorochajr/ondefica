@@ -1,7 +1,16 @@
 import { apiFetch } from './api'
 
 export const eventosService = {
-  listar: () => apiFetch('/eventos'),
+  // filtros (opcional): { situacao: 'proximos' | 'passados' | 'todos', de: 'AAAA-MM-DD', ate: 'AAAA-MM-DD' }
+  listar: (filtros = {}) => {
+    const params = new URLSearchParams()
+    if (filtros.situacao) params.set('situacao', filtros.situacao)
+    if (filtros.de) params.set('de', filtros.de)
+    if (filtros.ate) params.set('ate', filtros.ate)
+
+    const query = params.toString()
+    return apiFetch(query ? `/eventos?${query}` : '/eventos')
+  },
 
   meus: () => apiFetch('/eventos/meus'),
 

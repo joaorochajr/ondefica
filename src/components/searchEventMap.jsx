@@ -1,66 +1,22 @@
 import { useState } from 'react';
+import { useEhMobile } from '../utils/useEhMobile';
+import { IconeBusca, IconeCalendario, IconeMenu, IconeFechar } from './Icones';
+
+// true se o evento já terminou (as datas são salvas como meia-noite UTC do dia)
+function eventoEncerrado(evento) {
+    const hoje = new Date().toLocaleDateString('en-CA'); // AAAA-MM-DD no horário local
+    return (evento.data_fim || '').slice(0, 10) < hoje;
+}
+
+const OPCOES_SITUACAO = [
+    { valor: 'proximos', rotulo: 'Próximos' },
+    { valor: 'passados', rotulo: 'Passados' },
+    { valor: 'todos', rotulo: 'Todos' }
+];
 
 const styles = {
-    container: {
-        position: 'absolute',
-        top: '10px',
-        left: '50px',
-        width: '200px',
-        zIndex: 1000,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-start',
-        fontFamily: 'sans-serif',
-        gap: '5px'
-    },
-    wrapper: {
-        width: '80%',
-        display: 'flex',
-        gap: '5px'
-    },
-    button: {
-        height: '34px',
-        background: 'white',
-        border: 'none',
-        borderRadius: '4px',
-        boxShadow: '0 1px 5px rgba(0,0,0,0.65)',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        padding: '0 12px',
-        fontSize: '13px',
-        fontWeight: 'bold',
-        color: '#1976D2',
-        whiteSpace: 'nowrap'
-    },
-    btnVerEventos: {
-        height: '34px',
-        background: 'white',
-        border: 'none',
-        borderRadius: '4px',
-        boxShadow: '0 1px 5px rgba(0,0,0,0.65)',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        padding: '0 12px',
-        fontSize: '13px',
-        fontWeight: 'bold',
-        color: '#1976D2',
-        whiteSpace: 'nowrap'
-    },
-    input: {
-        width: '200px',
-        height: '34px',
-        padding: '0 10px',
-        border: 'none',
-        borderRadius: '4px',
-        boxShadow: '0 1px 5px rgba(0,0,0,0.65)',
-        outline: 'none'
-    },
     resultsContainer: {
-        width: '200px',
+        width: '100%',
         background: 'white',
         borderRadius: '4px',
         boxShadow: '0 1px 5px rgba(0,0,0,0.65)',
@@ -71,8 +27,8 @@ const styles = {
         background: 'white',
         borderRadius: '4px',
         boxShadow: '0 1px 5px rgba(0,0,0,0.65)',
-        width: '239px',
-        maxHeight: '260px',
+        width: '100%',
+        maxHeight: '380px',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden'
@@ -132,11 +88,83 @@ const styles = {
         fontSize: '14px',
         color: '#999',
         backgroundColor: 'white'
+    },
+    filtros: {
+        padding: '8px 12px',
+        borderBottom: '1px solid #eee',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '6px'
+    },
+    abas: {
+        display: 'flex',
+        gap: '4px'
+    },
+    aba: {
+        flex: 1,
+        height: '28px',
+        border: '1px solid #cbd5e1',
+        borderRadius: '4px',
+        background: 'white',
+        color: '#475569',
+        fontSize: '12px',
+        cursor: 'pointer'
+    },
+    abaAtiva: {
+        background: '#1976D2',
+        borderColor: '#1976D2',
+        color: 'white',
+        fontWeight: 'bold'
+    },
+    linhaData: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+        fontSize: '12px',
+        color: '#666'
+    },
+    rotuloData: {
+        width: '26px'
+    },
+    inputData: {
+        flex: 1,
+        minWidth: 0,
+        height: '28px',
+        padding: '0 6px',
+        border: '1px solid #cbd5e1',
+        borderRadius: '4px',
+        fontSize: '12px'
+    },
+    aviso: {
+        fontSize: '12px',
+        color: '#d32f2f'
+    },
+    limparPeriodo: {
+        alignSelf: 'flex-start',
+        background: 'none',
+        border: 'none',
+        padding: 0,
+        color: '#1976D2',
+        fontSize: '12px',
+        cursor: 'pointer',
+        textDecoration: 'underline'
+    },
+    tagEncerrado: {
+        fontSize: '11px',
+        color: '#888',
+        marginLeft: '6px',
+        fontWeight: 'normal'
     }
 };
 
-export default function SearchEventMap({ eventos, onSelectEvento, buscaAberta, setBuscaAberta }) {
+export default function SearchEventMap({ eventos, onSelectEvento, buscaAberta, setBuscaAberta, filtros, setFiltros, carregando, acoesUsuario, itensMenuMobile = [] }) {
+    const ehMobile = useEhMobile();
+    const [menuMobileAberto, setMenuMobileAberto] = useState(false);
     const [termoBusca, setTermoBusca] = useState('');
+
+    const temPeriodo = Boolean(filtros.de || filtros.ate);
+    const filtroAtivo = filtros.situacao !== 'proximos' || temPeriodo;
+    const periodoInvalido = Boolean(filtros.de && filtros.ate && filtros.de > filtros.ate);
     const [itemFocadoId, setItemFocadoId] = useState(null);
     const [painelEventosAberto, setPainelEventosAberto] = useState(false);
 
@@ -148,40 +176,101 @@ export default function SearchEventMap({ eventos, onSelectEvento, buscaAberta, s
         setPainelEventosAberto(false);
     }
 
+    function abrirBusca() {
+        setBuscaAberta(true);
+        setPainelEventosAberto(false);
+        setMenuMobileAberto(false);
+    }
+
+    function abrirPainelEventos() {
+        setPainelEventosAberto(true);
+        setBuscaAberta(false);
+        setTermoBusca('');
+        setMenuMobileAberto(false);
+    }
+
     return (
+        <>
         <div
-            style={styles.container}
+            className={ehMobile ? 'map-mobile-topo' : 'map-topbar'}
             onMouseDown={(e) => e.stopPropagation()}
             onDoubleClick={(e) => e.stopPropagation()}
             onWheel={(e) => e.stopPropagation()}
         >
 
-            <div style={{ ...styles.wrapper, height: '34px' }}>
-            {buscaAberta ? (
-                <input
-                    autoFocus
-                    type="text"
-                    placeholder="Buscar evento..."
-                    value={termoBusca}
-                    onChange={(e) => setTermoBusca(e.target.value)}
-                    onBlur={() => {
-                        if (!termoBusca) setBuscaAberta(false);
-                    }}
-                    style={styles.input}
-                />
-            ) : (
-                <button
-                    onClick={() => {
-                        setBuscaAberta(true);
-                        setPainelEventosAberto(false);
-                    }}
-                    style={styles.button}
-                >
-                    <span>🔍</span>
-                    <span>Buscar evento...</span>
-                </button>
+            {/* Barra única (desktop): busca | ver eventos | ajuda | usuário */}
+            {!ehMobile && (
+                <div className="map-topbar-bar">
+                    <label className="map-topbar-search">
+                        <IconeBusca />
+                        <input
+                            type="text"
+                            placeholder="Buscar evento..."
+                            value={termoBusca}
+                            onFocus={() => {
+                                setBuscaAberta(true);
+                                setPainelEventosAberto(false);
+                            }}
+                            onChange={(e) => setTermoBusca(e.target.value)}
+                            onBlur={() => {
+                                if (!termoBusca) setBuscaAberta(false);
+                            }}
+                        />
+                    </label>
+
+                    <button
+                        className="map-topbar-eventos"
+                        onClick={() => {
+                            setPainelEventosAberto(!painelEventosAberto);
+                            setBuscaAberta(false);
+                            setTermoBusca('');
+                        }}
+                    >
+                        <IconeCalendario />
+                        <span>Ver Eventos{filtroAtivo ? ' (filtro ativo)' : ''}</span>
+                    </button>
+
+                    {acoesUsuario}
+                </div>
             )}
-        </div>
+
+            {/* Mobile: lupa redonda ou campo de busca no topo */}
+            {ehMobile && (
+                <div className="map-mobile-topo-conteudo">
+                    {!buscaAberta && !painelEventosAberto && (
+                        <button className="map-mobile-lupa" onClick={abrirBusca} title="Buscar evento">
+                            <IconeBusca />
+                        </button>
+                    )}
+
+                    {buscaAberta && (
+                        <div className="map-mobile-busca">
+                            <label className="map-topbar-search">
+                                <IconeBusca />
+                                <input
+                                    autoFocus
+                                    type="text"
+                                    placeholder="Buscar evento..."
+                                    value={termoBusca}
+                                    onChange={(e) => setTermoBusca(e.target.value)}
+                                    onBlur={() => {
+                                        if (!termoBusca) setBuscaAberta(false);
+                                    }}
+                                />
+                            </label>
+                            <button
+                                className="map-mobile-busca-fechar"
+                                onClick={() => {
+                                    setTermoBusca('');
+                                    setBuscaAberta(false);
+                                }}
+                            >
+                                <IconeFechar size={20} />
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Dropdown da busca por texto */}
             {buscaAberta && termoBusca && (
@@ -216,16 +305,6 @@ export default function SearchEventMap({ eventos, onSelectEvento, buscaAberta, s
                 </div>
             )}
 
-            {/* Linha 2: botão dedicado "Ver Eventos" — some quando painel está aberto ou lupa aberta */}
-            {!buscaAberta && !painelEventosAberto && (
-                <button
-                    onClick={() => setPainelEventosAberto(true)}
-                    style={styles.btnVerEventos}
-                >
-                    📅 Ver Eventos
-                </button>
-            )}
-
             {/* Painel de listagem de eventos */}
             {painelEventosAberto && !buscaAberta && (
                 <div style={styles.painelContainer}
@@ -236,9 +315,64 @@ export default function SearchEventMap({ eventos, onSelectEvento, buscaAberta, s
                     <div style={styles.header}
                     onTouchStart={(e) => e.stopPropagation()}>
                         <span style={styles.headerText}>
-                            {eventos.length} evento{eventos.length !== 1 ? 's' : ''}
+                            {carregando
+                                ? 'Carregando...'
+                                : `${eventos.length} evento${eventos.length !== 1 ? 's' : ''}`}
                         </span>
                         <button onClick={fecharPainel} style={styles.closeBtn}>✕</button>
+                    </div>
+
+                    {/* Filtros: próximos / passados / todos + período */}
+                    <div style={styles.filtros}>
+                        <div style={styles.abas}>
+                            {OPCOES_SITUACAO.map((opcao) => (
+                                <button
+                                    key={opcao.valor}
+                                    onClick={() => setFiltros({ ...filtros, situacao: opcao.valor })}
+                                    style={{
+                                        ...styles.aba,
+                                        ...(filtros.situacao === opcao.valor ? styles.abaAtiva : {})
+                                    }}
+                                >
+                                    {opcao.rotulo}
+                                </button>
+                            ))}
+                        </div>
+
+                        <label style={styles.linhaData}>
+                            <span style={styles.rotuloData}>De</span>
+                            <input
+                                type="date"
+                                value={filtros.de}
+                                max={filtros.ate || undefined}
+                                onChange={(e) => setFiltros({ ...filtros, de: e.target.value })}
+                                style={styles.inputData}
+                            />
+                        </label>
+
+                        <label style={styles.linhaData}>
+                            <span style={styles.rotuloData}>Até</span>
+                            <input
+                                type="date"
+                                value={filtros.ate}
+                                min={filtros.de || undefined}
+                                onChange={(e) => setFiltros({ ...filtros, ate: e.target.value })}
+                                style={styles.inputData}
+                            />
+                        </label>
+
+                        {periodoInvalido && (
+                            <div style={styles.aviso}>A data "De" precisa ser antes da data "Até".</div>
+                        )}
+
+                        {temPeriodo && (
+                            <button
+                                onClick={() => setFiltros({ ...filtros, de: '', ate: '' })}
+                                style={styles.limparPeriodo}
+                            >
+                                Limpar período
+                            </button>
+                        )}
                     </div>
 
                     <div style={styles.painelList}>
@@ -257,7 +391,12 @@ export default function SearchEventMap({ eventos, onSelectEvento, buscaAberta, s
                                         onMouseLeave={() => setItemFocadoId(null)}
                                         style={{ ...styles.item, background: focado ? '#f5f5f5' : 'white' }}
                                     >
-                                        <div style={styles.itemTitle}>{evento.descricao}</div>
+                                        <div style={styles.itemTitle}>
+                                            {evento.descricao}
+                                            {eventoEncerrado(evento) && (
+                                                <span style={styles.tagEncerrado}>(encerrado)</span>
+                                            )}
+                                        </div>
                                         <div style={styles.itemMeta}>
                                             📅 {new Date(evento.data_inicio).toLocaleDateString('pt-BR', { timeZone: 'UTC' })} → {new Date(evento.data_fim).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
                                         </div>
@@ -270,11 +409,65 @@ export default function SearchEventMap({ eventos, onSelectEvento, buscaAberta, s
                                 );
                             })
                         ) : (
-                            <div style={styles.emptyItem}>Nenhum evento disponível</div>
+                            <div style={styles.emptyItem}>
+                                {carregando
+                                    ? 'Carregando...'
+                                    : filtroAtivo
+                                        ? 'Nenhum evento encontrado com esse filtro'
+                                        : 'Nenhum evento disponível'}
+                            </div>
                         )}
                     </div>
                 </div>
             )}
         </div>
+
+        {/* MOBILE: botão flutuante com menu que abre pra cima */}
+        {ehMobile && (
+            <>
+                {menuMobileAberto && (
+                    <div className="map-mobile-overlay" onClick={() => setMenuMobileAberto(false)} />
+                )}
+
+                <div className="map-mobile-fab-area">
+                    {menuMobileAberto && (
+                        <div className="map-mobile-itens">
+                            <button className="map-mobile-item" onClick={abrirBusca}>
+                                <span className="map-mobile-item-rotulo">Buscar evento</span>
+                                <span className="map-mobile-item-icone"><IconeBusca /></span>
+                            </button>
+
+                            <button className="map-mobile-item" onClick={abrirPainelEventos}>
+                                <span className="map-mobile-item-rotulo">Ver Eventos</span>
+                                <span className="map-mobile-item-icone"><IconeCalendario /></span>
+                            </button>
+
+                            {itensMenuMobile.map((item) => (
+                                <button
+                                    key={item.chave}
+                                    className="map-mobile-item"
+                                    onClick={() => {
+                                        setMenuMobileAberto(false);
+                                        item.onClick();
+                                    }}
+                                >
+                                    <span className="map-mobile-item-rotulo">{item.rotulo}</span>
+                                    <span className="map-mobile-item-icone">{item.icone}</span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    <button
+                        className="map-mobile-fab"
+                        onClick={() => setMenuMobileAberto(!menuMobileAberto)}
+                        title={menuMobileAberto ? 'Fechar menu' : 'Abrir menu'}
+                    >
+                        {menuMobileAberto ? <IconeFechar size={26} /> : <IconeMenu size={26} />}
+                    </button>
+                </div>
+            </>
+        )}
+        </>
     );
 }

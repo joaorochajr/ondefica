@@ -20,4 +20,9 @@ export const eventosService = {
     }),
 
   deletar: (id) => apiFetch(`/eventos/${id}`, { method: 'DELETE' }),
+    importarStands: (id, origemId) =>
+    apiFetch(`/eventos/${id}/importar-stands`, {
+      method: 'POST',
+      body: JSON.stringify({ origemId }),
+    }),
 }

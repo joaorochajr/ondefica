@@ -37,6 +37,45 @@ function EditarEvento() {
   const [buscando, setBuscando] = useState(false)
   const [validandoEmail, setValidandoEmail] = useState(false)
   const [irParaStands, setIrParaStands] = useState(false)
+  const [meusEventos, setMeusEventos] = useState([])
+  const [origemId, setOrigemId] = useState('')
+  const [importando, setImportando] = useState(false)
+
+  useEffect(() => {
+    eventosService.meus()
+      .then((r) => (r.ok ? r.json() : []))
+      .then((lista) => setMeusEventos(lista.filter((e) => e._id !== id)))
+      .catch(() => setMeusEventos([]))
+  }, [id])
+
+  const importarStands = async () => {
+    if (!origemId) return
+    const origem = meusEventos.find((e) => e._id === origemId)
+
+    if (!window.confirm(
+      `Importar os stands de "${origem?.descricao}" para este evento?\n\nStands com nome já existente aqui serão ignorados.`
+    )) return
+
+    setImportando(true)
+    try {
+      const res = await eventosService.importarStands(id, origemId)
+      const dados = await res.json().catch(() => ({}))
+
+      if (res.ok) {
+        let msg = `${dados.importados} stand(s) importado(s).`
+        if (dados.ignorados > 0) msg += `\n${dados.ignorados} ignorado(s) por já existirem neste evento.`
+        alert(msg)
+        setOrigemId('')
+      } else {
+        alert(dados.message || `Erro código ${res.status}`)
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Erro de conexão ao importar stands.')
+    } finally {
+      setImportando(false)
+    }
+  }
 
   useEffect(() => {
     usuariosService
@@ -278,6 +317,30 @@ function EditarEvento() {
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap contributors' />
                 <LocationMarker position={posicao} setPosition={setPosicao} />
               </MapContainer>
+            </div>
+          </div>
+
+                    <div className="form-group">
+            <label className="form-label">Importar stands de outro evento</label>
+            <div className="form-collab-row">
+              <select
+                className="form-input"
+                value={origemId}
+                onChange={(e) => setOrigemId(e.target.value)}
+              >
+                <option value="">Selecione um evento</option>
+                {meusEventos.map((ev) => (
+                  <option key={ev._id} value={ev._id}>{ev.descricao}</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={importarStands}
+                className="form-add-btn"
+                disabled={!origemId || importando}
+              >
+                {importando ? 'Importando...' : 'Importar'}
+              </button>
             </div>
           </div>
 

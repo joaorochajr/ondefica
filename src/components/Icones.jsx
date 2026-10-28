@@ -85,3 +85,12 @@ export function IconeSair({ size }) {
         </Svg>
     )
 }
+
+export function IconeSeta({ size }) {
+    return (
+        <Svg size={size}>
+            <line x1="20" y1="12" x2="5" y2="12" />
+            <polyline points="11 6 5 12 11 18" />
+        </Svg>
+    )
+}

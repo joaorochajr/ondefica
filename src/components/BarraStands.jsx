@@ -36,23 +36,34 @@ function BarraStands({
             onTouchMove={(e) => e.stopPropagation()}
             onTouchEnd={(e) => e.stopPropagation()}
         >
-            <div className="map-lista-info">
-                {standsVisiveis.length} de {stands.length} stands encontrados
+            <div className="map-lista-header">
+                <span>
+                    {termo
+                        ? `${standsVisiveis.length} de ${stands.length} stands`
+                        : `${stands.length} stand${stands.length !== 1 ? 's' : ''}`}
+                </span>
+                <button className="map-lista-fechar" onClick={fecharBusca}>✕</button>
             </div>
 
-            {standsVisiveis.length > 0 ? (
-                standsVisiveis.map((stand) => {
-                    const id = stand.id || stand._id;
-                    return (
-                        <div key={id} className="map-lista-item" onClick={() => onSelecionarStand(stand)}>
-                            <strong>{stand.nome || stand.descricao}</strong>
-                            {stand.nome && <p>{stand.descricao}</p>}
-                        </div>
-                    );
-                })
-            ) : (
-                <div className="map-lista-vazio">Nenhum stand encontrado para esta busca.</div>
-            )}
+            <div className="map-lista-corpo">
+                {standsVisiveis.length > 0 ? (
+                    standsVisiveis.map((stand) => {
+                        const id = stand.id || stand._id;
+                        return (
+                            <div key={id} className="map-lista-item" onClick={() => onSelecionarStand(stand)}>
+                                <div className="map-lista-titulo">{stand.nome || stand.descricao}</div>
+                                {stand.nome && stand.descricao && (
+                                    <div className="map-lista-desc">{stand.descricao}</div>
+                                )}
+                            </div>
+                        );
+                    })
+                ) : (
+                    <div className="map-lista-vazio">
+                        {termo ? 'Nenhum stand encontrado para esta busca' : 'Nenhum stand cadastrado'}
+                    </div>
+                )}
+            </div>
         </div>
     );
 
@@ -76,11 +87,6 @@ function BarraStands({
                                 onFocus={() => setAberta(true)}
                                 onChange={(e) => setTermo(e.target.value)}
                             />
-                            {aberta && (
-                                <button className="map-busca-fechar" onClick={fecharBusca} title="Fechar busca">
-                                    <IconeFechar size={18} />
-                                </button>
-                            )}
                         </label>
 
                         <button className="map-topbar-eventos" onClick={onVoltar}>

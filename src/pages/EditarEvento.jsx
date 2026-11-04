@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import { usuariosService } from '../services/usuariosService'
@@ -21,6 +21,9 @@ function LocationMarker({ position, setPosition }) {
 function EditarEvento() {
   const { id } = useParams()
   const navigate = useNavigate()
+
+  const [searchParams] = useSearchParams()
+  const voltarPara = searchParams.get('origem') === 'admin' ? '/admin' : '/meus-eventos'
 
   const [descricao, setDescricao] = useState('')
   const [nomeLocal, setNomeLocal] = useState('') //adição de estado para local
@@ -107,15 +110,17 @@ function EditarEvento() {
           setLoading(false)
         } else {
           alert('Evento não encontrado.')
-          navigate('/meus-eventos')
+          //navigate('/meus-eventos')
+          navigate('voltarPara')
         }
       } catch {
         alert('Erro de conexão.')
-        navigate('/meus-eventos')
+        //navigate('/meus-eventos')
+        navigate('voltarPara')
       }
     }
     fetchEvento()
-  }, [id, navigate, meuEmail])
+  }, [id, navigate, meuEmail, voltarPara])
 
   useEffect(() => {
     const buscar = async (query) => {
@@ -211,7 +216,7 @@ function EditarEvento() {
           msg += `\n\n⚠️ E-mails não encontrados:\n- ${data.emailsNaoEncontrados.join('\n- ')}`
         }
         alert(msg)
-        irParaStands ? navigate(`/eventos/${id}/stands`) : navigate('/meus-eventos')
+        irParaStands ? navigate(`/eventos/${id}/stands`) : navigate('voltarPara')
       } else {
         const status = res.status;
         
@@ -239,7 +244,7 @@ function EditarEvento() {
     <div className="evento-form-page">
       <div className="evento-form-container">
         <header className="evento-form-header">
-          <button onClick={() => navigate('/meus-eventos')} className="btn-back">← Voltar</button>
+          <button onClick={() => navigate('voltarPara')} className="btn-back">← Voltar</button>
           <h2 className="evento-form-header__title">Editar Evento</h2>
         </header>
 

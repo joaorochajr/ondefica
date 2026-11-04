@@ -4,11 +4,14 @@ import MapView from '../components/Mapview'
 import { usuariosService } from '../services/usuariosService'
 import { IconeAjuda, IconePessoa, IconeSair, IconeCalendario } from '../components/Icones'
 import '../styles/mapa.css'
+import { useUsuarioAtual } from '../utils/useUsuarioAtual'
+
 
 function Mapa() {
   const [user, setUser] = useState(null)
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
+  const { ehSuper } = useUsuarioAtual()
   
   const menuRef = useRef(null)
 
@@ -76,6 +79,7 @@ function Mapa() {
           </button>
         )}
       </div>
+      {ehSuper && <button onClick={() => navigate('/admin/usuarios')}>Gerenciar usuários</button>}
     </>
   )
 
@@ -91,6 +95,7 @@ function Mapa() {
         { chave: 'login', rotulo: 'Login', icone: <IconePessoa />, onClick: () => navigate('/login') },
         itemAjuda,
       ]
+    (ehSuper ? [{ chave: 'admin-usuarios', rotulo: 'Gerenciar usuários', icone: '👥', onClick: () => navigate('/admin/usuarios') }] : [])
 
   return (
     <div className="map-wrapper">

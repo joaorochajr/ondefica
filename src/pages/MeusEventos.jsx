@@ -3,11 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import { usuariosService } from '../services/usuariosService'
 import { eventosService } from '../services/eventosService'
 import '../styles/meusEventos.css'
+import { useUsuarioAtual } from '../utils/useUsuarioAtual'
 
 function MeusEventos() {
   const [eventos, setEventos] = useState([])
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
+  const { ehSuper } = useUsuarioAtual()
+
 
   useEffect(() => {
     usuariosService
@@ -50,6 +53,11 @@ function MeusEventos() {
             <p className="meus-eventos-header__subtitle">Gerencie suas localizações e eventos cadastrados.</p>
           </div>
           <div className="meus-eventos-header__actions">
+            {ehSuper && (
+              <button onClick={() => navigate('/admin')} className="btn btn--secondary">
+                🛡️ Painel do superusuário
+              </button>
+            )}
             <button onClick={() => navigate('/mapa')} className="btn btn--secondary">← Voltar ao Mapa</button>
             <button onClick={() => navigate('/criar-evento')} className="btn btn--primary">+ Novo Evento</button>
           </div>

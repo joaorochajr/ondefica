@@ -3,16 +3,18 @@ import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import MapView from '../components/Mapview'
 import { usuariosService } from '../services/usuariosService'
-import { IconeAjuda, IconePessoa, IconeSair, IconeCalendario } from '../components/Icones'
+import {
+  IconeAjuda,
+  IconePessoa,
+  IconeSair,
+  IconeCalendario
+} from '../components/Icones'
 import '../styles/mapa.css'
-import { useUsuarioAtual } from '../utils/useUsuarioAtual'
 
 function Mapa() {
   const [user, setUser] = useState(null)
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
-  const { ehSuper } = useUsuarioAtual()
-
   const menuRef = useRef(null)
 
   useEffect(() => {
@@ -52,14 +54,21 @@ function Mapa() {
 
   const acoesUsuario = (
     <>
-      <button className="map-btn-help" onClick={() => navigate('/faq')} title="Ajuda / Documentação">
+      <button
+        className="map-btn-help"
+        onClick={() => navigate('/faq')}
+        title="Ajuda / Documentação"
+      >
         <IconeAjuda />
       </button>
 
       <div className="map-user" ref={menuRef}>
         {user ? (
           <>
-            <div className="map-avatar" onClick={() => setOpen(!open)}>
+            <div
+              className="map-avatar"
+              onClick={() => setOpen(!open)}
+            >
               {user.nome?.charAt(0).toUpperCase()}
             </div>
 
@@ -72,12 +81,17 @@ function Mapa() {
                   Meus eventos
                 </button>
 
-                <button onClick={logout}>Sair</button>
+                <button onClick={logout}>
+                  Sair
+                </button>
               </div>
             )}
           </>
         ) : (
-          <button className="map-btn-login" onClick={() => navigate('/login')}>
+          <button
+            className="map-btn-login"
+            onClick={() => navigate('/login')}
+          >
             <span className="map-login-icone" aria-hidden="true">
               <IconePessoa />
             </span>
@@ -85,12 +99,6 @@ function Mapa() {
           </button>
         )}
       </div>
-
-      {ehSuper && (
-        <button onClick={() => navigate('/admin/usuarios')}>
-          Gerenciar usuários
-        </button>
-      )}
     </>
   )
 
@@ -101,47 +109,38 @@ function Mapa() {
     onClick: () => navigate('/faq')
   }
 
-  const itensMenuMobile = [
-    ...(user
-      ? [
-          {
-            chave: 'meus-eventos',
-            rotulo: 'Meus eventos',
-            icone: <IconeCalendario />,
-            onClick: () => navigate('/meus-eventos')
-          },
-          {
-            chave: 'sair',
-            rotulo: 'Sair',
-            icone: <IconeSair />,
-            onClick: logout
-          },
-          itemAjuda
-        ]
-      : [
-          {
-            chave: 'login',
-            rotulo: 'Login',
-            icone: <IconePessoa />,
-            onClick: () => navigate('/login')
-          },
-          itemAjuda
-        ]),
-    ...(ehSuper
-      ? [
-          {
-            chave: 'admin-usuarios',
-            rotulo: 'Gerenciar usuários',
-            icone: '👥',
-            onClick: () => navigate('/admin/usuarios')
-          }
-        ]
-      : [])
-  ]
+  const itensMenuMobile = user
+    ? [
+        {
+          chave: 'meus-eventos',
+          rotulo: 'Meus eventos',
+          icone: <IconeCalendario />,
+          onClick: () => navigate('/meus-eventos')
+        },
+        {
+          chave: 'sair',
+          rotulo: 'Sair',
+          icone: <IconeSair />,
+          onClick: logout
+        },
+        itemAjuda
+      ]
+    : [
+        {
+          chave: 'login',
+          rotulo: 'Login',
+          icone: <IconePessoa />,
+          onClick: () => navigate('/login')
+        },
+        itemAjuda
+      ]
 
   return (
     <div className="map-wrapper">
-      <MapView acoesUsuario={acoesUsuario} itensMenuMobile={itensMenuMobile} />
+      <MapView
+        acoesUsuario={acoesUsuario}
+        itensMenuMobile={itensMenuMobile}
+      />
     </div>
   )
 }

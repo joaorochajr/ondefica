@@ -10,6 +10,7 @@ import { standsService } from '../services/standsService'
 import { eventoIcon, standIcon, usuarioIcon } from '../utils/mapIcons';
 import TracarRotaApe from './TracarRotaApe';
 import StandModal from './StandModal';
+import BarraStands from './BarraStands'
 import SearchEventMap from './searchEventMap';
 
 // true se o evento já terminou (as datas são salvas como meia-noite UTC do dia)
@@ -261,115 +262,27 @@ if (!position) {
     );
 }
 
-    const estilosLista = {
-        fabBtnStands: {
-            position: 'absolute',
-            top: '120px',
-            left: '20px',
-            zIndex: 1000,
-            backgroundColor: '#FFFFFF',
-            color: '#1976D2',
-            border: '1px solid #1976D2',
-            borderRadius: '50px',
-            padding: '10px 18px',
-            fontSize: '14px',
-            fontWeight: 'bold',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-        },
-        
-        painelStands: {
-            position: 'absolute',
-            top: '120px',
-            left: '20px',
-            width: '320px',
-            maxWidth: 'calc(100vw - 40px)', 
-            maxHeight: '60vh', 
-            backgroundColor: '#FFFFFF',
-            borderRadius: '12px',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
-            zIndex: 1000,
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden'
-        },
-        
-        headerBusca: {
-            display: 'flex',
-            alignItems: 'center',
-            padding: '12px',
-            borderBottom: '1px solid #EAEAEA',
-            gap: '8px'
-        },
-        inputWrapper: {
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            backgroundColor: '#F4F6F8',
-            borderRadius: '8px',
-            overflow: 'hidden',
-        },
-        input: {
-            width: '100%',
-            padding: '10px 0',
-            border: 'none',
-            backgroundColor: 'transparent',
-            fontSize: '14px',
-            outline: 'none',
-            color: '#333'
-        },
-        closeBtn: {
-            background: 'none',
-            border: 'none',
-            fontSize: '16px',
-            color: '#666',
-            padding: '8px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: '50%',
-        },
-        headerInfo: {
-            padding: '8px 16px',
-            backgroundColor: '#F8FAFC',
-            borderBottom: '1px solid #EAEAEA',
-        },
-        listContainer: {
-            overflowY: 'auto',
-            flex: 1,
-            scrollbarWidth: 'thin',
-        },
-        listItem: {
-            padding: '14px 16px',
-            borderBottom: '1px solid #F4F6F8',
-            cursor: 'pointer',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '4px',
-            transition: 'background-color 0.2s',
-        },
-        itemTitle: {
-            fontSize: '14px',
-            color: '#1A1A1A'
-        },
-        itemDesc: {
-            fontSize: '12px',
-            color: '#888',
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden'
-        },
-        emptyState: {
-            padding: '24px',
-            textAlign: 'center',
-            color: '#888',
-            fontSize: '14px'
-        }
+    const voltarParaEventos = () => {
+        setModoStands(false);
+        setEventoAtivoId(null);
+        setStands([]);
+        setDestinoRota(null);
+        setFocoStand(null);
+        setTermoBuscaStands('');
+        setBuscaStandsAberta(false);
+    };
+
+    const selecionarStand = (stand) => {
+        const id = stand.id || stand._id;
+        setFocoStand([stand.latitude, stand.longitude]);
+        setBuscaStandsAberta(false);
+        setTermoBuscaStands('');
+
+        setTimeout(() => {
+            if (standMarkerRefs.current[id]) {
+                standMarkerRefs.current[id].openPopup();
+            }
+        }, 500);
     };
 
     const estiloBotaoPrincipal = {
@@ -445,116 +358,19 @@ if (!position) {
 
 
 
-            {modoStands && !buscaAberta && (
-                <button
-                    onClick={() => {
-                        setModoStands(false);
-                        setEventoAtivoId(null);
-                        setStands([]);
-                        setDestinoRota(null);
-                        setFocoStand(null);
-                        setTermoBuscaStands('');
-                        setBuscaStandsAberta(false);
-                    }}
-                    style={{
-                        position: 'absolute',
-                        zIndex: 9999,
-                        top: '55px',
-                        left: '50px',
-                        height: '34px',
-                        background: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        boxShadow: '0 1px 5px rgba(0,0,0,0.65)',
-                        cursor: 'pointer'
-                    }}
-                    >
-                    ← Voltar para eventos
-                </button>)}
-
-            {modoStands && stands.length > 0 && (
-                !buscaStandsAberta ? (
-                    <button
-                        onClick={() => setBuscaStandsAberta(true)}
-                        style={estilosLista.fabBtnStands}
-                    >
-                        <span style={{ fontSize: '16px' }}>📍</span> Buscar Stands
-                    </button>
-                ) : (
-                    <div style={estilosLista.painelStands}>
-                        
-                        <div style={estilosLista.headerBusca}>
-                            <div style={estilosLista.inputWrapper}>
-                                <span style={{ padding: '0 8px', color: '#666' }}>🔍</span>
-                                <input
-                                    autoFocus
-                                    type="text"
-                                    placeholder="Nome ou descrição..."
-                                    value={termoBuscaStands}
-                                    onChange={(e) => setTermoBuscaStands(e.target.value)}
-                                    style={estilosLista.input}
-                                />
-                            </div>
-                            <button
-                                onClick={() => {
-                                    setBuscaStandsAberta(false);
-                                    setTermoBuscaStands(''); 
-                                }}
-                                style={estilosLista.closeBtn}
-                            >
-                                ✕
-                            </button>
-                        </div>
-
-                        <div style={estilosLista.headerInfo}>
-                            <span style={{ fontSize: '12px', color: '#666' }}>
-                                {standsVisiveis.length} de {stands.length} stands encontrados
-                            </span>
-                        </div>
-
-                        <div style={estilosLista.listContainer}>
-                            {standsVisiveis.length > 0 ? (
-                                standsVisiveis.map(stand => {
-
-                                    const idTarget = stand.id || stand._id;
-                                    
-                                    return (
-                                        <div
-                                            key={idTarget}
-                                            style={estilosLista.listItem}
-                                            onClick={() => {
-                                                setFocoStand([stand.latitude, stand.longitude]);
-                                                
-                                                setBuscaStandsAberta(false);
-                                                
-                                                setTimeout(() => {
-                                                    if (standMarkerRefs.current[idTarget]) {
-                                                        standMarkerRefs.current[idTarget].openPopup();
-                                                    }
-                                                }, 500); 
-                                            }}
-                                        >
-                                            <strong style={estilosLista.itemTitle}>
-                                                {stand.nome || stand.descricao}
-                                            </strong>
-                                            {stand.nome && (
-                                                <p style={estilosLista.itemDesc}>{stand.descricao}</p>
-                                            )}
-                                        </div>
-                                    );
-                                })
-                            ) : (
-                                <div style={estilosLista.emptyState}>
-                                    Nenhum stand encontrado para esta busca.
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )
-            )}
-
             {modoStands && (
-                <div className="map-user-box">{acoesUsuario}</div>
+                <BarraStands
+                    stands={stands}
+                    standsVisiveis={standsVisiveis}
+                    termo={termoBuscaStands}
+                    setTermo={setTermoBuscaStands}
+                    aberta={buscaStandsAberta}
+                    setAberta={setBuscaStandsAberta}
+                    onSelecionarStand={selecionarStand}
+                    onVoltar={voltarParaEventos}
+                    acoesUsuario={acoesUsuario}
+                    itensMenuMobile={itensMenuMobile}
+                />
             )}
 
             <StandModal

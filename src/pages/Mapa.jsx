@@ -52,11 +52,7 @@ function Mapa() {
 
   const acoesUsuario = (
     <>
-      <button
-        className="map-btn-help"
-        onClick={() => navigate('/faq')}
-        title="Ajuda / Documentação"
-      >
+      <button className="map-btn-help" onClick={() => navigate('/faq')} title="Ajuda / Documentação">
         <IconeAjuda />
       </button>
 
@@ -76,17 +72,12 @@ function Mapa() {
                   Meus eventos
                 </button>
 
-                <button onClick={logout}>
-                  Sair
-                </button>
+                <button onClick={logout}>Sair</button>
               </div>
             )}
           </>
         ) : (
-          <button
-            className="map-btn-login"
-            onClick={() => navigate('/login')}
-          >
+          <button className="map-btn-login" onClick={() => navigate('/login')}>
             <span className="map-login-icone" aria-hidden="true">
               <IconePessoa />
             </span>
@@ -150,10 +141,7 @@ function Mapa() {
 
   return (
     <div className="map-wrapper">
-      <MapView
-        acoesUsuario={acoesUsuario}
-        itensMenuMobile={itensMenuMobile}
-      />
+      <MapView acoesUsuario={acoesUsuario} itensMenuMobile={itensMenuMobile} />
     </div>
   )
 }

@@ -13,7 +13,6 @@ import EditarEvento from './pages/EditarEvento'
 
 import GerenciarStands from './pages/GerenciarStands'
 import FAQ from './pages/FAQ'
-import AdminUsuarios from './pages/AdminUsuarios'
 import AdminPainel from './pages/AdminPainel'
 
 const cadastroPath = import.meta.env.VITE_CADASTRO_PATH
@@ -46,8 +45,6 @@ function App() {
                 <Route path="/eventos/:eventoId/stands" element={<GerenciarStands />} />
                 
                 <Route path="/faq" element={<FAQ />} />
-
-                <Route path="/admin/usuarios" element={<AdminUsuarios />} />
 
                  <Route path="/admin" element={<AdminPainel />} />
             </Routes>

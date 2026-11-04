@@ -1,7 +1,6 @@
 # Mapa de Eventos
 
 Sistema web para visualização de eventos e stands em mapa interativo utilizando geolocalização.
-
 ---
 
 # 🚀 Tecnologias Utilizadas

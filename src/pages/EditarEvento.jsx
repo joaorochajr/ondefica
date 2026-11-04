@@ -111,12 +111,12 @@ function EditarEvento() {
         } else {
           alert('Evento não encontrado.')
           //navigate('/meus-eventos')
-          navigate('voltarPara')
+          navigate(voltarPara)
         }
       } catch {
         alert('Erro de conexão.')
         //navigate('/meus-eventos')
-        navigate('voltarPara')
+        navigate(voltarPara)
       }
     }
     fetchEvento()
@@ -216,7 +216,7 @@ function EditarEvento() {
           msg += `\n\n⚠️ E-mails não encontrados:\n- ${data.emailsNaoEncontrados.join('\n- ')}`
         }
         alert(msg)
-        irParaStands ? navigate(`/eventos/${id}/stands`) : navigate('voltarPara')
+        irParaStands ? navigate(`/eventos/${id}/stands`) : navigate(voltarPara)
       } else {
         const status = res.status;
         
@@ -244,7 +244,7 @@ function EditarEvento() {
     <div className="evento-form-page">
       <div className="evento-form-container">
         <header className="evento-form-header">
-          <button onClick={() => navigate('voltarPara')} className="btn-back">← Voltar</button>
+          <button onClick={() => navigate(voltarPara)} className="btn-back">← Voltar</button>
           <h2 className="evento-form-header__title">Editar Evento</h2>
         </header>
 

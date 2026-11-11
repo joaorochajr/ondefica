@@ -7,6 +7,7 @@ import {
   IconeAjuda,
   IconePessoa,
   IconeSair,
+  IconeEscudo,
   IconeCalendario
 } from '../components/Icones'
 import '../styles/mapa.css'

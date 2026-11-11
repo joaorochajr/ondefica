@@ -81,6 +81,15 @@ function Mapa() {
                   Meus eventos
                 </button>
 
+                {user.role === 'superuser' && (
+                  <button onClick={() => {
+                    navigate('/admin')
+                    setOpen(false)
+                  }}>
+                    Gerenciar eventos e usuários
+                  </button>
+                )}
+
                 <button onClick={logout}>
                   Sair
                 </button>
@@ -117,6 +126,14 @@ function Mapa() {
           icone: <IconeCalendario />,
           onClick: () => navigate('/meus-eventos')
         },
+        ...(user.role === 'superuser'
+          ? [{
+              chave: 'admin',
+              rotulo: 'Gerenciar eventos e usuários',
+              icone: <IconeEscudo />,
+              onClick: () => navigate('/admin')
+            }]
+          : []),
         {
           chave: 'sair',
           rotulo: 'Sair',

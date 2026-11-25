@@ -3,33 +3,15 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { useUsuarioAtual } from '../utils/useUsuarioAtual'
 import { adminService } from '../services/adminService'
 import { eventosService } from '../services/eventosService'
+import '../styles/meusEventos.css'
+import '../styles/adminPainel.css'
 
 const ROTULO_STATUS = { ACTIVE: 'Ativo', PENDING: 'Pendente', REJECTED: 'Rejeitado' }
 const formatarData = (d) => new Date(d).toLocaleDateString('pt-BR', { timeZone: 'UTC' })
 
-const e = {
-  pagina: { maxWidth: '960px', margin: '0 auto', padding: '16px' },
-  topo: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' },
-  abas: { display: 'flex', gap: '8px', margin: '12px 0' },
-  aba: { padding: '8px 16px', border: '1px solid #1976d2', background: '#fff', color: '#1976d2', borderRadius: '6px', cursor: 'pointer' },
-  abaAtiva: { padding: '8px 16px', border: '1px solid #1976d2', background: '#1976d2', color: '#fff', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' },
-  busca: { width: '100%', padding: '8px', margin: '4px 0 12px', border: '1px solid #cbd5e1', borderRadius: '6px', boxSizing: 'border-box' },
-  card: { border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px', marginBottom: '10px', display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' },
-  meta: { fontSize: '13px', color: '#64748b', margin: '2px 0' },
-  tabelaWrap: { overflowX: 'auto' },
-  tabela: { width: '100%', borderCollapse: 'collapse', fontSize: '14px' },
-  th: { textAlign: 'left', padding: '8px', borderBottom: '2px solid #e2e8f0' },
-  td: { padding: '8px', borderBottom: '1px solid #eee', verticalAlign: 'middle' },
-  input: { width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', boxSizing: 'border-box' },
-  btn: { padding: '6px 10px', marginRight: '4px', border: '1px solid #1976d2', background: '#fff', color: '#1976d2', borderRadius: '6px', cursor: 'pointer' },
-  btnPrimario: { padding: '6px 10px', marginRight: '4px', border: 'none', background: '#1976d2', color: '#fff', borderRadius: '6px', cursor: 'pointer' },
-  btnPerigo: { padding: '6px 10px', border: '1px solid #d32f2f', background: '#fff', color: '#d32f2f', borderRadius: '6px', cursor: 'pointer' },
-  msg: { margin: '8px 0', color: '#1976d2' },
-}
-
 export default function AdminPainel() {
   const navigate = useNavigate()
-  const { carregando, ehSuper } = useUsuarioAtual()
+  const { usuario, carregando, ehSuper } = useUsuarioAtual()
 
   const [aba, setAba] = useState('eventos')
   const [eventos, setEventos] = useState([])
@@ -43,10 +25,22 @@ export default function AdminPainel() {
   async function carregar() {
     setCarregandoLista(true)
     try {
-      const [resEv, resUs] = await Promise.all([adminService.eventos(), adminService.usuarios()])
+      // /admin/eventos não traz os eventos do próprio superusuário, então buscamos também /eventos/meus
+      const [resEv, resUs, resMeus] = await Promise.all([
+        adminService.eventos(), adminService.usuarios(), eventosService.meus(),
+      ])
       const dEv = await resEv.json()
       const dUs = await resUs.json()
-      setEventos(resEv.ok && Array.isArray(dEv) ? dEv : [])
+      const dMeus = await resMeus.json().catch(() => [])
+      const deOutros = resEv.ok && Array.isArray(dEv) ? dEv : []
+      const meus = resMeus.ok && Array.isArray(dMeus) ? dMeus : []
+
+      const idsMeus = new Set(meus.map((x) => x._id))
+      const todos = [
+        ...meus.map((x) => ({ ...x, ehMeu: true })),
+        ...deOutros.filter((x) => !idsMeus.has(x._id)).map((x) => ({ ...x, ehMeu: false })),
+      ]
+      setEventos(todos)
       setUsuarios(resUs.ok && Array.isArray(dUs) ? dUs : [])
     } catch {
       setMsg('Erro ao carregar dados')
@@ -57,7 +51,7 @@ export default function AdminPainel() {
 
   useEffect(() => { if (ehSuper) carregar() }, [ehSuper])
 
-  if (carregando) return <p style={e.pagina}>Carregando...</p>
+  if (carregando) return <div className="meus-eventos-loading">Carregando...</div>
   if (!ehSuper) return <Navigate to="/mapa" replace />
 
   const termo = busca.trim().toLowerCase()
@@ -140,110 +134,132 @@ export default function AdminPainel() {
   }
 
   return (
-    <div style={e.pagina}>
-      <div style={e.topo}>
-        <h2>Painel do superusuário</h2>
-        <div>
-          <button style={e.btn} onClick={() => navigate('/meus-eventos')}>Meus eventos</button>
-          <button style={e.btn} onClick={() => navigate('/mapa')}>← Mapa</button>
-        </div>
-      </div>
-
-      <div style={e.abas}>
-        <button style={aba === 'eventos' ? e.abaAtiva : e.aba} onClick={() => { setAba('eventos'); setBusca(''); setMsg('') }}>
-          Eventos de outros ({eventos.length})
-        </button>
-        <button style={aba === 'usuarios' ? e.abaAtiva : e.aba} onClick={() => { setAba('usuarios'); setBusca(''); setMsg('') }}>
-          Usuários ({usuarios.length})
-        </button>
-      </div>
-
-      <input
-        style={e.busca}
-        placeholder={aba === 'eventos' ? 'Buscar evento ou local...' : 'Buscar por nome ou email...'}
-        value={busca}
-        onChange={(ev) => setBusca(ev.target.value)}
-      />
-
-      {msg && <p style={e.msg}>{msg}</p>}
-      {carregandoLista && <p>Carregando...</p>}
-
-      {!carregandoLista && aba === 'eventos' && (
-        eventosVisiveis.length === 0 ? <p>Nenhum evento encontrado</p> :
-        eventosVisiveis.map((ev) => (
-          <div key={ev._id} style={e.card}>
-            <div>
-              <strong>{ev.descricao}</strong>
-              {ev.nome_local && <p style={e.meta}>📍 {ev.nome_local}</p>}
-              <p style={e.meta}>📅 {formatarData(ev.data_inicio)} → {formatarData(ev.data_fim)}</p>
-              <p style={e.meta}>
-                👤 {(ev.administradores || []).map((a) => a.nome || a.email).join(', ') || 'Sem administrador'}
-              </p>
-            </div>
-            <div>
-              <button style={e.btn} onClick={() => navigate(`/editar-evento/${ev._id}?origem=admin`)}>✏️ Editar</button>
-              <button style={e.btnPerigo} onClick={() => apagarEvento(ev)}>🗑️ Apagar</button>
-            </div>
+    <div className="meus-eventos-page">
+      <div className="meus-eventos-container">
+        <header className="meus-eventos-header">
+          <div>
+            <h2 className="meus-eventos-header__title">Painel do superusuário</h2>
+            <p className="meus-eventos-header__subtitle">Gerencie todos os eventos e usuários do sistema.</p>
           </div>
-        ))
-      )}
+          <div className="meus-eventos-header__actions">
+            <button onClick={() => navigate('/meus-eventos')} className="btn btn--secondary">Meus eventos</button>
+            <button onClick={() => navigate('/mapa')} className="btn btn--secondary">← Voltar ao Mapa</button>
+          </div>
+        </header>
 
-      {!carregandoLista && aba === 'usuarios' && (
-        <div style={e.tabelaWrap}>
-          <table style={e.tabela}>
-            <thead>
-              <tr>
-                <th style={e.th}>Nome</th><th style={e.th}>Email</th>
-                <th style={e.th}>Papel</th><th style={e.th}>Status</th><th style={e.th}>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {usuariosVisiveis.length === 0 && (
-                <tr><td style={e.td} colSpan={5}>Nenhum usuário encontrado</td></tr>
-              )}
-              {usuariosVisiveis.map((u) => editandoId === u._id ? (
-                <tr key={u._id}>
-                  <td style={e.td}><input style={e.input} value={form.nome} onChange={(ev) => setForm({ ...form, nome: ev.target.value })} /></td>
-                  <td style={e.td}><input style={e.input} value={form.email} onChange={(ev) => setForm({ ...form, email: ev.target.value })} /></td>
-                  <td style={e.td}>
-                    <select style={e.input} value={form.role} onChange={(ev) => setForm({ ...form, role: ev.target.value })}>
-                      <option value="user">Usuário</option>
-                      <option value="superuser">Superusuário</option>
-                    </select>
-                  </td>
-                  <td style={e.td}>
-                    <select style={e.input} value={form.status} onChange={(ev) => setForm({ ...form, status: ev.target.value })}>
-                      <option value="ACTIVE">Ativo</option>
-                      <option value="PENDING">Pendente</option>
-                      <option value="REJECTED">Rejeitado</option>
-                    </select>
-                  </td>
-                  <td style={e.td}>
-                    <input style={{ ...e.input, marginBottom: '6px' }} type="password" placeholder="Nova senha (opcional)"
-                      value={form.senha} onChange={(ev) => setForm({ ...form, senha: ev.target.value })} />
-                    <button style={e.btnPrimario} onClick={() => salvarUsuario(u._id)}>Salvar</button>
-                    <button style={e.btn} onClick={() => setEditandoId(null)}>Cancelar</button>
-                  </td>
-                </tr>
-              ) : (
-                <tr key={u._id}>
-                  <td style={e.td}>{u.nome}</td>
-                  <td style={e.td}>{u.email}</td>
-                  <td style={e.td}>{u.role === 'superuser' ? 'Superusuário' : 'Usuário'}</td>
-                  <td style={e.td}>{ROTULO_STATUS[u.status] || '—'}</td>
-                  <td style={e.td}>
-                    <button style={e.btn} onClick={() => iniciarEdicao(u)}>Editar</button>
-                    <button style={e.btn} onClick={() => alterarPapel(u)}>
-                      {u.role === 'superuser' ? 'Remover super' : 'Tornar super'}
-                    </button>
-                    <button style={e.btnPerigo} onClick={() => apagarUsuario(u)}>Apagar</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="admin-abas">
+          <button className={`admin-aba${aba === 'eventos' ? ' admin-aba--ativa' : ''}`}
+            onClick={() => { setAba('eventos'); setBusca(''); setMsg('') }}>
+            Eventos ({eventos.length})
+          </button>
+          <button className={`admin-aba${aba === 'usuarios' ? ' admin-aba--ativa' : ''}`}
+            onClick={() => { setAba('usuarios'); setBusca(''); setMsg('') }}>
+            Usuários ({usuarios.length})
+          </button>
         </div>
-      )}
+
+        <input
+          className="admin-busca"
+          placeholder={aba === 'eventos' ? 'Buscar evento ou local...' : 'Buscar por nome ou email...'}
+          value={busca}
+          onChange={(ev) => setBusca(ev.target.value)}
+        />
+
+        {msg && <p className="admin-msg">{msg}</p>}
+        {carregandoLista && <div className="meus-eventos-loading">Carregando...</div>}
+
+        {!carregandoLista && aba === 'eventos' && (
+          eventosVisiveis.length === 0 ? (
+            <div className="meus-eventos-empty"><h3 style={{ margin: 0, color: '#555' }}>Nenhum evento encontrado</h3></div>
+          ) : (
+            <div className="meus-eventos-grid">
+              {eventosVisiveis.map((ev) => (
+                <div key={ev._id} className="evento-card">
+                  <div>
+                    {ev.ehMeu && <span className="admin-selo">Meu evento</span>}
+                    <h3 className="evento-card__title">{ev.descricao}</h3>
+                    {ev.nome_local && <p className="evento-card__local">📍 {ev.nome_local}</p>}
+                    <p className="evento-card__date">
+                      <span className="evento-card__date-icon">📅</span>
+                      <strong>Início:</strong>&nbsp;{formatarData(ev.data_inicio)}
+                    </p>
+                    <p className="evento-card__date">
+                      <span className="evento-card__date-icon">🏁</span>
+                      <strong>Fim:</strong>&nbsp;{formatarData(ev.data_fim)}
+                    </p>
+                    <p className="evento-card__date">
+                      <span className="evento-card__date-icon">👤</span>
+                      {(ev.administradores || []).map((a) => a.nome || a.email).join(', ') || (ev.ehMeu && usuario?.nome) || 'Sem administrador'}
+                    </p>
+                  </div>
+                  <div className="evento-card__actions">
+                    <button className="btn btn--edit" onClick={() => navigate(`/editar-evento/${ev._id}?origem=admin`)}>✏️ Editar</button>
+                    <button className="btn btn--delete" onClick={() => apagarEvento(ev)}>🗑️ Apagar</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        )}
+
+        {!carregandoLista && aba === 'usuarios' && (
+          <div className="admin-tabela-wrap">
+            <table className="admin-tabela">
+              <thead>
+                <tr><th>Nome</th><th>Email</th><th>Papel</th><th>Status</th><th>Ações</th></tr>
+              </thead>
+              <tbody>
+                {usuariosVisiveis.length === 0 && (
+                  <tr><td colSpan={5}>Nenhum usuário encontrado</td></tr>
+                )}
+                {usuariosVisiveis.map((u) => editandoId === u._id ? (
+                  <tr key={u._id}>
+                    <td><input className="admin-input" value={form.nome} onChange={(ev) => setForm({ ...form, nome: ev.target.value })} /></td>
+                    <td><input className="admin-input" value={form.email} onChange={(ev) => setForm({ ...form, email: ev.target.value })} /></td>
+                    <td>
+                      <select className="admin-input" value={form.role} onChange={(ev) => setForm({ ...form, role: ev.target.value })}>
+                        <option value="user">Usuário</option>
+                        <option value="superuser">Superusuário</option>
+                      </select>
+                    </td>
+                    <td>
+                      <select className="admin-input" value={form.status} onChange={(ev) => setForm({ ...form, status: ev.target.value })}>
+                        <option value="ACTIVE">Ativo</option>
+                        <option value="PENDING">Pendente</option>
+                        <option value="REJECTED">Rejeitado</option>
+                      </select>
+                    </td>
+                    <td>
+                      <input className="admin-input" style={{ marginBottom: '8px' }} type="password" placeholder="Nova senha (opcional)"
+                        value={form.senha} onChange={(ev) => setForm({ ...form, senha: ev.target.value })} />
+                      <div className="admin-acoes">
+                        <button className="btn btn--primary btn--sm" onClick={() => salvarUsuario(u._id)}>Salvar</button>
+                        <button className="btn btn--secondary btn--sm" onClick={() => setEditandoId(null)}>Cancelar</button>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  <tr key={u._id}>
+                    <td>{u.nome}</td>
+                    <td>{u.email}</td>
+                    <td>{u.role === 'superuser' ? 'Superusuário' : 'Usuário'}</td>
+                    <td>{ROTULO_STATUS[u.status] || '—'}</td>
+                    <td>
+                      <div className="admin-acoes">
+                        <button className="btn btn--edit btn--sm" onClick={() => iniciarEdicao(u)}>Editar</button>
+                        <button className="btn btn--secondary btn--sm" onClick={() => alterarPapel(u)}>
+                          {u.role === 'superuser' ? 'Remover super' : 'Tornar super'}
+                        </button>
+                        <button className="btn btn--delete btn--sm" onClick={() => apagarUsuario(u)}>Apagar</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

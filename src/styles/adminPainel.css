@@ -1,0 +1,117 @@
+/* Painel do superusuário — reaproveita .meus-eventos-*, .evento-card e .btn de meusEventos.css */
+
+.admin-abas {
+  display: flex;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+  flex-wrap: wrap;
+}
+
+.admin-aba {
+  border: 1px solid var(--color-border-input);
+  background: var(--color-white);
+  color: #333;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: var(--font-size-base);
+  padding: 10px 24px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+.admin-aba--ativa {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-white);
+  box-shadow: 0 2px 8px var(--color-primary-shadow);
+}
+
+.admin-busca {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 18px;
+  margin-bottom: var(--space-2xl);
+  font-family: inherit;
+  font-size: var(--font-size-base);
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-pill);
+  background: var(--color-white);
+  outline: none;
+}
+
+.admin-busca:focus {
+  border-color: var(--color-primary);
+}
+
+.admin-msg {
+  margin: 0 0 var(--space-lg);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.admin-selo {
+  display: inline-block;
+  margin-bottom: var(--space-sm);
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border-radius: var(--radius-pill);
+}
+
+.admin-tabela-wrap {
+  overflow-x: auto;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+.admin-tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-base);
+  color: #333;
+}
+
+.admin-tabela th {
+  text-align: left;
+  padding: var(--space-lg);
+  background: #fafafa;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.admin-tabela td {
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+
+.admin-tabela tr:last-child td { border-bottom: none; }
+
+.admin-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  font-family: inherit;
+  font-size: var(--font-size-base);
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-md);
+  background: var(--color-input-bg);
+}
+
+.admin-acoes {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+/* variação compacta dos botões da tabela */
+.btn--sm {
+  flex: none;
+  padding: 6px 14px;
+  font-size: var(--font-size-sm);
+}

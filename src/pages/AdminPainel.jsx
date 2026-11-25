@@ -142,7 +142,6 @@ export default function AdminPainel() {
             <p className="meus-eventos-header__subtitle">Gerencie todos os eventos e usuários do sistema.</p>
           </div>
           <div className="meus-eventos-header__actions">
-            <button onClick={() => navigate('/meus-eventos')} className="btn btn--secondary">Meus eventos</button>
             <button onClick={() => navigate('/mapa')} className="btn btn--secondary">← Voltar ao Mapa</button>
           </div>
         </header>
@@ -155,6 +154,9 @@ export default function AdminPainel() {
           <button className={`admin-aba${aba === 'usuarios' ? ' admin-aba--ativa' : ''}`}
             onClick={() => { setAba('usuarios'); setBusca(''); setMsg('') }}>
             Usuários ({usuarios.length})
+          </button>
+          <button className="admin-aba" onClick={() => navigate('/meus-eventos')}>
+            Meus eventos
           </button>
         </div>
 
